@@ -1,0 +1,60 @@
+{
+  "name": "2324-webservices-JelleLeus1996",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "repository": "https://github.com/Web-IV/2324-webservices-JelleLeus1996.git",
+  "author": "Jelle Leus <jelle.leus@student.hogent.be>",
+  "license": "MIT",
+  "dependencies": {
+    "@joi/date": "^2.1.0",
+    "@koa/cors": "^4.0.0",
+    "@koa/router": "^12.0.1",
+    "argon2": "^0.31.2",
+    "config": "^3.3.9",
+    "joi": "^17.11.0",
+    "jsonwebtoken": "^9.0.2",
+    "knex": "^3.0.1",
+    "koa": "^2.14.2",
+    "koa-bodyparser": "^4.4.1",
+    "koa2-swagger-ui": "^5.10.0",
+    "mysql": "^2.18.1",
+    "mysql2": "^3.6.5",
+    "node-emoji": "1.11.0",
+    "swagger-jsdoc": "^6.2.8",
+    "winston": "^3.11.0"
+  },
+  "scripts": {
+    "start": "env-cmd nodemon",
+    "test": "env-cmd -f .env.test jest --runInBand",
+    "test:coverage": "env-cmd -f .env.test jest --runInBand --coverage",
+    "lint": "npx eslint . --fix"
+  },
+  "devDependencies": {
+    "env-cmd": "^10.1.0",
+    "eslint": "^8.56.0",
+    "eslint-plugin-import": "^2.29.1",
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.1",
+    "supertest": "^6.3.3"
+  },
+  "nodemonConfig": {
+    "signal": "SIGTERM",
+    "ignore": [
+      "node_modules/*",
+      ".vscode/*"
+    ],
+    "delay": "80",
+    "watch": [
+      "config",
+      "src"
+    ],
+    "ext": "js,json",
+    "legacyWatch": true,
+    "exec": "node --inspect=0.0.0.0:9000 --trace-warnings src/index.js"
+  },
+  "engines": {
+    "npm": ">=9.8.0",
+    "node": ">=20.6.0",
+    "yarn": ">=1.22.0"
+  }
+}
