@@ -1,35 +1,13 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-24ddc0f5d75046c5622901739e7c5dd533143b0c8e959d652212380cedb1ea36.svg)](https://classroom.github.com/a/snPWRHYg)
-# Examenopdracht Front-end Web Development / Web Services
-
-
-- Student: Jelle Leus
-- Studentennummer: 202186597
-- E-mailadres: <mailto:jelle.leus@student.hogent.be>
-
-## Vereisten
-
-Ik verwacht dat volgende software reeds geïnstalleerd is:
-
-- [NodeJS](https://nodejs.org)
-- [Yarn](https://yarnpkg.com)
-- [MySQL Community Server](https://dev.mysql.com/downloads/mysql/)
-
-
-## Opstarten
-
-Je kan de applicatie opstarten door 'yarn start' in de terminal in te geven. 
-Daarna kan je alles http request testen in postman
-
-
-## Testen
-
-Je kan de testen runnen door 'yarn test' in de terminal in te geven. 
-
 # Jelle Leus (202186597)
 
-Web Services:
+- [  ] Web Services:
   - https://github.com/Web-IV/2324-webservices-JelleLeus1996
   - https://webservice-cycling.onrender.com
+
+**Logingegevens**
+
+- Gebruikersnaam/e-mailadres: jelle.leus@student.hogent.be
+- Wachtwoord: DgUnA5_UnO"
 
 
 ## Projectbeschrijving
@@ -76,6 +54,48 @@ De vertegenwoordigers van de 'echte' teams kunnen alle teams en rensters zien (i
 - `DELETE /api/teams/:teamId`: Team met een bepaald teamId verwijderen
 
 ## Behaalde minimumvereisten
+
+
+### Web Services
+
+- **datalaag**
+
+  - [x] voldoende complex (meer dan één tabel, 2 een-op-veel of veel-op-veel relaties)
+  - [x] één module beheert de connectie + connectie wordt gesloten bij sluiten server
+  - [x] heeft migraties - indien van toepassing
+  - [x] heeft seeds
+<br />
+
+- **repositorylaag**
+
+  - [x] definieert één repository per entiteit (niet voor tussentabellen) - indien van toepassing
+  - [x] mapt OO-rijke data naar relationele tabellen en vice versa - indien van toepassing
+<br />
+
+- **servicelaag met een zekere complexiteit**
+
+  - [x] bevat alle domeinlogica
+  - [x] bevat geen SQL-queries of databank-gerelateerde code
+<br />
+
+- **REST-laag**
+
+  - [x] meerdere routes met invoervalidatie
+  - [x] degelijke foutboodschappen
+  - [x] volgt de conventies van een RESTful API
+  - [x] bevat geen domeinlogica
+  - [x] geen API calls voor entiteiten die geen zin hebben zonder hun ouder (bvb tussentabellen)
+  - [x] degelijke authorisatie/authenticatie op alle routes
+<br />
+
+- **algemeen**
+
+  - [x] er is een minimum aan logging voorzien
+  - [ ] een aantal niet-triviale integratietesten (min. 1 controller >=80% coverage)
+  - [x] minstens één extra technologie
+  - [x] maakt gebruik van de laatste ES-features (async/await, object destructuring, spread operator...)
+  - [x] duidelijke en volledige README.md
+  - [x] volledig en tijdig ingediend dossier en voldoende commits
 
 ## Projectstructuur
 

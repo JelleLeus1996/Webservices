@@ -1,0 +1,22 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach to server",
+      "port": 9000,
+      "address": "localhost",
+      "restart": true,
+      "timeout": 10000
+    },
+      {
+        "name": "Run yarn test in debug",
+        "type": "node",
+        "request": "launch",
+        "cwd": "${workspaceFolder}",
+        "runtimeExecutable": "yarn",
+        "runtimeArgs": ["test"]
+      }
+  ]
+}
