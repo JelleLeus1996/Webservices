@@ -51,6 +51,7 @@ De vertegenwoordigers van de 'echte' teams kunnen alle teams en rensters zien (i
 - `GET /api/riders/all/getAllRidersWithTeam`: Alle rensters ophalen met bijhorende teams.
 - `GET /api/riders/full-name/:first_name/:last_name`: Renster met een bepaalde voor- en achternaam ophalen
 - `GET /api/riders/:id`: Renster met een bepaald id ophalen
+
 - `GET /api/riders/team/:teamId`: Alle rensters ophalen van een bepaald team
 
 - `POST /api/riders`: Renster toevoegen
