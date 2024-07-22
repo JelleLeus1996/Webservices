@@ -1,33 +1,71 @@
 const {getLogger} = require('../core/logging');
 const {getKnex, tables} = require('../data');
  
-//get table database
+//get basic team data of all teams
 const findAllTeams = async() => {
   return await getKnex()(tables.team)
     .select('teamId', 'name', 'country', 'victories', 'points','team_status',
       'abbreviation', 'director', 'assistant', 'representative', 'bike','email')
     .orderBy('name','ASC');
 };
-const findAll = async(teamId) => {
+const findAllTeamData = async () => {
+  // Get all teams with basic info
   const teams = await getKnex()(tables.team)
-    .innerJoin(tables.rider,`${tables.team}.teamId`,'=',`${tables.rider}.teamId`)
     .select(SELECT_COLUMNS)
-    .where(`${tables.team}.teamId`, teamId);
- 
-  const budget = await getKnex()(tables.sponsor)
-  .where(`${tables.sponsor}.teamId`, teamId).sum('contribution as budget');
+    .orderBy('name', 'ASC');
 
-  const riderCost = await getKnex()(tables.rider)
-  .where(`${tables.rider}.teamId`, teamId).sum(getKnex().raw('monthly_wage * 12 as rider_cost'));
+  // Get the sponsors & races for each team
+  const teamWithDetails = await Promise.all(teams.map(async (team) => {
+    // Get sponsors for the team
+    const sponsors = await getKnex()(tables.sponsor)
+      .select('sponsorId', 'name', 'industry', 'contribution')
+      .where('teamId', team.teamId);
 
-  const transformedTeams = teams.map(transformTeam);
-  transformedTeams.forEach(team=> {
-    team.budget = budget[O].budget || 0;
-    team.rider_cost = riderCost[0].rider_cost || 0;
-  });
+    // Get races for the team
+    const races = await getKnex()(tables.race)
+      .select('raceId', 'name', 'date', 'location')
+      .join(tables.race_teams, `${tables.race}.raceId`, `${tables.race_teams}.raceId`)
+      .where(`${tables.race_teams}.teamId`, team.teamId);
 
-  return transformedTeams;
+    return {
+      ...team,
+      sponsors,
+      races,
+    };
+  }));
+
+  return teamWithDetails;
 };
+
+//get all team data of all teams
+const findTeamsWithRiders = async (teamId) => {
+  // Get team data for the specified teamId
+  const team = await getKnex()(tables.team)
+    .where(`${tables.team}.teamId`, teamId)
+    .first(SELECT_COLUMNS);
+
+  if (!team) {
+    return null;
+  }
+
+  // Get sponsors for the team to calculate the budget
+  const sponsors = await getKnex()(tables.sponsor)
+    .where('teamId', teamId)
+    .sum('contribution as budget');
+
+  // Get riders for the team to calculate the rider cost
+  const riders = await getKnex()(tables.rider)
+    .where('teamId', teamId)
+    .sum(getKnex().raw('monthly_wage * 12 as rider_cost'));
+
+  // Transform the team data to include riders, budget, and rider cost
+  const transformedTeam = transformTeam(team);
+  transformedTeam.budget = sponsors[0].budget || 0;
+  transformedTeam.rider_cost = riders[0].rider_cost || 0;
+
+  return transformedTeam;
+};
+
 const findAllTeamsInfo = async() => {
   return await getKnex()(tables.team)
     .select()
@@ -35,7 +73,7 @@ const findAllTeamsInfo = async() => {
 };
 const SELECT_COLUMNS = [
   `${tables.team}.teamId AS teamId`, 'name', 'country', 'victories', `${tables.rider}.points AS rider_points`, 'team_status',
-  'abbreviation', 'director', 'assistant', 'representative', 'bike', 'budget', 'overhead_cost', 'rider_cost', 'email',
+  'abbreviation', 'director', 'assistant', 'representative', 'bike', 'overhead_cost', 'email',
   `${tables.rider}.id AS rider_id`, `${tables.rider}.nationality`, `${tables.rider}.last_name`, `${tables.rider}.first_name`,
   `${tables.rider}.birthday`, `${tables.rider}.points AS rider_points`, `${tables.rider}.monthly_wage AS wage`
 ];
@@ -140,7 +178,8 @@ const findAllTeamsWithFinancials = async () => {
     .orderBy('name', 'ASC');
 
     const teamsWithRidercost = await Promise.all(teamsWithBudget.map(async(team)=>{
-      const totalRiderCost = await getKnext()(tables.rider).where(`${tables.rider}.teamId`,team.teamId)
+      const totalRiderCost = await getKnex()(tables.rider)
+      .where(`${tables.rider}.teamId`,team.teamId)
       .sum( {rider_cost : getKnex().raw('monthly_wage'*12) });
 
       return {
@@ -151,4 +190,4 @@ const findAllTeamsWithFinancials = async () => {
     return teamsWithRidercost;
   }
  
-module.exports={findAllTeams,findAllTeamsInfo,findById, findByName, findAll, create, findCount,updateById,deleteById, findByEmail};
+module.exports={findAllTeamData, findAllTeams,findAllTeamsInfo,findById, findByName, findTeamsWithRiders, create, findCount,updateById,deleteById, findByEmail, findAllTeamsWithFinancials};

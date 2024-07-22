@@ -352,7 +352,7 @@ module.exports = {
       { id:344, nationality:'Netherlands', last_name:'Krahl', first_name:'Judith', birthday:'2000-04-01', points:0, teamId:22, monthly_wage:500.00 },
       { id:345, nationality:'Netherlands', last_name:'Neefjes', first_name:'Tessa', birthday:'1997-12-26', points:0, teamId:22, monthly_wage:500.00 },
       { id:346, nationality:'Belgium', last_name:'Roelandts', first_name:'Julie', birthday:'2003-05-13', points:0, teamId:22, monthly_wage:500.00 },
-      { id:347, nationality:'Belgium', last_name:'Schokkaert', first_name:'Febe', birthday:'1999-01-31', points:0, teamId:22, monthly_wage:500.00 },
+      { id:347, nationality:'Belgium', last_name:'Poppe', first_name:'Febe', birthday:'2000-07-14', points:69, teamId:22, monthly_wage:500.00 },
       { id:348, nationality:'Belgium', last_name:'Veerman', first_name:'Deborah', birthday:'1993-12-29', points:0, teamId:22, monthly_wage:500.00 },
       { id:349, nationality:'Belgium', last_name:'Zwaenepoel', first_name:'Tessa', birthday:'2001-04-12', points:0, teamId:22, monthly_wage:500.00 },
     ]);

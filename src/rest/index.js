@@ -2,6 +2,7 @@ const Router = require('@koa/router');
 
 const installTeamRouter = require('./team');//import of function from transaction
 const installRiderRouter = require ('./rider');
+const installRaceRouter = require('../')
 
 /**
  * Install all routes in the given Koa application.
