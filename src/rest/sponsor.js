@@ -1,7 +1,7 @@
 const Router = require('@koa/router');
 const Joi = require('joi').extend(require('@joi/date'));
 
-const riderService = require('../service/rider');
+const sponsorService = require('../service/sponsor');
 const validate = require('../core/validation');
 const {requireAuthentication, makeRequireRole} = require('../core/auth');
 const Role = require('../core/roles');
@@ -31,67 +31,65 @@ const checkTeam = (ctx, teamId)=>{
   }
 };
 
-//Verification via paramater of rider to get teamId
-const checkTeamIdViaRider = async (ctx, next) => {
+//Verification via paramater of sponsor to get teamId
+const checkTeamIdViaSponsor = async (ctx, next) => {
   const { id } = ctx.params;
-  const rider = await riderService.getById(Number(id));
-  checkTeam(ctx, rider.teamId);
+  const sponsor = await sponsorService.getById(Number(id));
+  checkTeam(ctx, sponsor.teamId);
   return next();
 };
 
-//GET all riders
-const getRiders = async (ctx) => {
-  ctx.body = await riderService.getAll();
+//GET all sponsors
+const getSponsors = async (ctx) => {
+  ctx.body = await sponsorService.getAll();
 };
-const getAllRidersInfo = async (ctx) => {
-  ctx.body = await riderService.getAllRidersInfo();
+const getAllSponsorsInfo = async (ctx) => {
+  ctx.body = await sponsorService.getAllWithFinancials();
 };
 
-//GET all riders with team info
-const getAllRidersWithTeam = async (ctx) =>
+//GET all sponsors with team info
+const getAllSponsorInfoWithTeams = async (ctx) =>
 {
-  ctx.body = await riderService.getAllWithTeam();
+  ctx.body = await sponsorService.getAllWithTeams();
 };
 
 //No input, so no validations of input
-getRiders.validationScheme = null;
-getAllRidersInfo.validationScheme = null;
-getAllRidersWithTeam.validationScheme = null;
+getSponsors.validationScheme = null;
+getAllSponsorsInfo.validationScheme = null;
+getAllSponsorInfoWithTeams.validationScheme = null;
 
-//GET individual rider (by id)
-const getRiderById = async (ctx) => {
-  ctx.body = await riderService.getById(Number(ctx.params.id));
+//GET individual sponsor (by id)
+const getSponsorById = async (ctx) => {
+  ctx.body = await sponsorService.getById(Number(ctx.params.id));
 };
 
 //Validation of the paramater id
-getRiderById.validationScheme = {
+getSponsorById.validationScheme = {
   params: Joi.object({
     id: Joi.number().integer().positive().required()
   })
 };
 
-//GET individual rider (by full name)
-const getRiderByFullName = async (ctx) => {
-  ctx.body = await riderService.getRiderByFullName(
-    String(ctx.params.first_name),
-    String(ctx.params.last_name));
+//GET individual sponsor by name
+const getSponsorByName = async (ctx) => {
+  ctx.body = await sponsorService.getByName(
+    String(ctx.params.name));
 };
 
 //Validation of the paramaters first & last name
-getRiderByFullName.validationScheme = {
+getSponsorByName.validationScheme = {
   params: Joi.object({
-    last_name: Joi.string().min(1).max(50).required(),
-    first_name: Joi.string().min(1).max(50).required(),
+    name: Joi.string().min(1).max(99).required(),
   })
 };
 
 //GET individual team (by id)
-const getRidersFromTeam = async (ctx) => {
-  ctx.body = await riderService.getRidersFromTeam(Number(ctx.params.teamId));
+const getSponsorsFromTeam = async (ctx) => {
+  ctx.body = await sponsorService.getByTeamId(Number(ctx.params.teamId));
 };
 
 //Validation of the paramater id
-getRidersFromTeam.validationScheme={
+getSponsorsFromTeam.validationScheme={
   params: Joi.object({
     teamId: Joi.number().integer().positive().required()
   })
@@ -99,106 +97,94 @@ getRidersFromTeam.validationScheme={
 
 
 
-//UPDATE rider
-const updateRider = async (ctx) => {
-  ctx.body = await riderService.updateById(Number(ctx.params.id), {
+//UPDATE sponsor
+const updateSponsor = async (ctx) => {
+  ctx.body = await sponsorService.updateById(Number(ctx.params.id), {
     ...ctx.request.body,
-    nationality: String(ctx.request.body.nationality),
-    last_name: String(ctx.request.body.last_name),
-    first_name: String(ctx.request.body.first_name),
-    birthday: new Date(ctx.request.body.birthday),
-    points: Number(ctx.request.body.points),
+    name: String(ctx.request.body.name),
+    industry: String(ctx.request.body.industry),
+    contribution: Number(ctx.request.body.contribution),
     teamId: ctx.state.session.teamId,
-    monthly_wage: Number(ctx.request.body.monthly_wage),  
   });
 };
 
-//Validation of the paramater id & the given rider info
-updateRider.validationScheme={
+//Validation of the paramater id & the given sponsor info
+updateSponsor.validationScheme={
   params: Joi.object({
     id: Joi.number().integer().positive().required()
   }),
   body:{
-    nationality: Joi.string().min(1).max(50).required(),
-    last_name: Joi.string().min(1).max(50).required(),
-    first_name: Joi.string().min(1).max(50).required(),
+    name: Joi.string().min(1).max(99).required(),
+    industry: Joi.string().min(1).max(99).required(),
     teamId: Joi.number().integer().required(),
-    birthday: Joi.date().greater('1-1-1970').required(),
-    points: Joi.number().min(0).max(1000000),
-    monthly_wage: Joi.number().min(0).max(1000000),
+    contribution: Joi.number().min(0).max(100000000),
   }
 };
 
-//POST rider
-const createRider = async (ctx) => {
-  const newRider = await riderService.create({
+//POST sponsor
+const createSponsor = async (ctx) => {
+  const newSponsor = await sponsorService.create({
     ...ctx.request.body,
-    nationality: String(ctx.request.body.nationality),
-    last_name: String(ctx.request.body.last_name),
-    first_name: String(ctx.request.body.first_name),
-    birthday: new Date(ctx.request.body.birthday),
-    points: Number(ctx.request.body.points),
+    name: String(ctx.request.body.name),
+    industry: String(ctx.request.body.industry),
     teamId: ctx.state.session.teamId,
-    monthly_wage: Number(ctx.request.body.monthly_wage),  
+    contribution: Number(ctx.request.body.contribution),  
   });
-  ctx.body = newRider;
+  ctx.body = newSponsor;
 };
 
-//Validation of the given rider info
-createRider.validationScheme={
+//Validation of the given sponsor info
+createSponsor.validationScheme={
   body:{
     id: Joi.number().integer().required(),
-    nationality: Joi.string().min(1).max(50).required(),
-    last_name: Joi.string().min(1).max(50).required(),
-    first_name: Joi.string().min(1).max(50).required(),
-    birthday: Joi.date().greater('1-1-1970').required(),
-    points: Joi.number().min(0).max(1000000),
-    monthly_wage: Joi.number().min(0).max(1000000),
+    name: Joi.string().min(1).max(99).required(),
+    industry: Joi.string().min(1).max(99).required(),
+    contribution: Joi.number().min(0).max(100000000),
   }
 };
 
-//DELETE rider
-const deleteRider = async (ctx) => {
-  await riderService.deleteById(Number(ctx.params.id));
+//DELETE sponsor
+const deleteSponsor = async (ctx) => {
+  await sponsorService.deleteById(Number(ctx.params.id));
   ctx.status = 204;
 };
 
 //Validation of the paramater id
-deleteRider.validationScheme = {
+deleteSponsor.validationScheme = {
   params: Joi.object({
     id: Joi.number().integer().positive().required()
   })
 };
 
 /**
- * Install riders routes in the given router.
+ * Install sponsors routes in the given router.
  *
  * @param {Router} app - The parent router.
  */
 module.exports = (app) => {//created nested route
   const router = new Router({
-    prefix: '/riders',
+    prefix: '/sponsors',
   });
 
   //Variable assigned for admin required requests
   const requireAdmin = makeRequireRole(Role.ADMIN);
 
   //GET
-  router.get('/', requireAuthentication, validate(getRiders), getRiders);
-  router.get('/allInfo', requireAuthentication, validate(getAllRidersInfo), checkTeamId, getAllRidersInfo);
-  router.get('/all/getAllRidersWithTeam', requireAuthentication, validate(getAllRidersWithTeam.validationScheme),getAllRidersWithTeam);
-  router.get('/full-name/:first_name/:last_name', requireAuthentication, validate(getRiderByFullName.validationScheme), checkTeamId, getRiderByFullName);
-  router.get('/:id', requireAuthentication, validate(getRiderById.validationScheme),checkTeamIdViaRider, getRiderById);
-  router.get('/team/:teamId', requireAuthentication, validate(getRidersFromTeam.validationScheme),checkTeamId, getRidersFromTeam);
+  router.get('/', requireAuthentication, validate(getSponsors), getSponsors);
+  router.get('/allInfo', requireAuthentication, validate(getAllSponsorsInfo), checkTeamId, getAllSponsorsInfo);
+  router.get('/all/getAllSponsorsWithTeam', requireAuthentication, validate(getAllSponsorInfoWithTeams.validationScheme),getAllSponsorInfoWithTeams);
+  router.get('/name/:name', requireAuthentication, validate(getSponsorByName.validationScheme), checkTeamId, getSponsorByName);
+  router.get('/:id', requireAuthentication, validate(getSponsorById.validationScheme),checkTeamIdViaSponsor, getSponsorById);
+  router.get('/team/:teamId', requireAuthentication, validate(getSponsorsFromTeam.validationScheme),checkTeamId, getSponsorsFromTeam);
 
   //POST
-  router.post('/', requireAuthentication,requireAdmin, validate(createRider.validationScheme), createRider);
+  router.post('/', requireAuthentication,requireAdmin, validate(createSponsor.validationScheme), createSponsor);
 
   //UPDATE (PUT)
-  router.put('/:id',requireAuthentication, validate(updateRider.validationScheme),checkTeamIdViaRider, updateRider);
+  router.put('/:id',requireAuthentication, validate(updateSponsor.validationScheme),checkTeamIdViaSponsor, updateSponsor);
 
   //DELETE
-  router.delete('/:id',requireAuthentication, requireAdmin, validate(deleteRider.validationScheme), deleteRider);
+  router.delete('/:id',requireAuthentication, requireAdmin, validate(deleteSponsor.validationScheme), deleteSponsor);
   
   app.use(router.routes())
     .use(router.allowedMethods());

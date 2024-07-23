@@ -30,6 +30,18 @@ const findAllRaces = async() => {
     .orderBy('date','ASC');
 };
 
+//GET race by ID
+const findRaceById = async(raceId) => {
+  const race = await getKnex()(tables.race)
+  .where('raceId', raceId)
+  .select(SELECT_COLUMNS_RACE);
+  if (!race)
+    {
+        return null;
+    }
+}
+
+
 //GET race by ID with associated teams
 const findRaceByIdWithTeams = async(raceId) => {
     const race = await getKnex()(tables.race)
@@ -117,4 +129,4 @@ const removeAllTeamsFromRace = async (raceId) => {
     .delete();
 };
 
-module.exports={deleteRaceById, create, updateRaceById, findRaceByIdWithTeams, findAllRaces, addTeamToRace, addTeamsToRace, removeTeamFromRace, removeAllTeamsFromRace,};
+module.exports={findRaceById,  findRaceByIdWithTeams, findAllRaces, create, updateRaceById,  deleteRaceById, removeTeamFromRace, removeAllTeamsFromRace, addTeamToRace, addTeamsToRace};

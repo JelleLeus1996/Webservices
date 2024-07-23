@@ -14,7 +14,7 @@ const getById = async (id) => {
   return sponsor;
 };
 
-//GET sponsor by teamId
+//GET sponsors by teamId
 const getByTeamId = async (id) => {
     const sponsor = await sponsorRepo.findAllFromTeam(id);
     if (!sponsor)
