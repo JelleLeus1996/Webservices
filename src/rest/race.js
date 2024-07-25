@@ -34,10 +34,10 @@ getRaceById.validationScheme = {
 };
 //Validation of the paramater id
 getRaceWithTeams.validationScheme = {
-    params: Joi.object({
-      id: Joi.number().integer().positive().required()
-    })
-  };
+  params: Joi.object({
+    id: Joi.number().integer().positive().required()
+  })
+};
 
 //UPDATE race
 const updateRace = async (ctx) => {
@@ -97,51 +97,51 @@ deleteRace.validationScheme = {
 
 //Add team to a race
 const addTeamToRace = async (ctx) => {
-    await raceService.postTeamToRace(Number(ctx.params.id),Number(ctx.params.id))
-    ctx.status = 204;
-}
+  await raceService.postTeamToRace(Number(ctx.params.id),Number(ctx.params.id));
+  ctx.status = 204;
+};
 //Validation of the paramater id
 addTeamToRace.validationScheme = {
-    params: Joi.object({
-      id: Joi.number().integer().positive().required()
-    })
-  };
+  params: Joi.object({
+    id: Joi.number().integer().positive().required()
+  })
+};
 
 //Add teams to a race
 const addTeamsToRace = async (ctx) => {
-    await raceService.postTeamsToRace(Number(ctx.params.id),Number(ctx.params.id))
-    ctx.status = 204;
-}
+  await raceService.postTeamsToRace(Number(ctx.params.id),Number(ctx.params.id));
+  ctx.status = 204;
+};
 //Validation of the paramater id
 addTeamsToRace.validationScheme = {
-    params: Joi.object({
-      id: Joi.number().integer().positive().required()
-    })
-  };
+  params: Joi.object({
+    id: Joi.number().integer().positive().required()
+  })
+};
 
 //delete team from a race
 const deleteTeamFromRace = async (ctx) => {
-    await raceService.deleteTeamFromRace(Number(ctx.params.id),Number(ctx.params.id))
-    ctx.status = 204;
-}
+  await raceService.deleteTeamFromRace(Number(ctx.params.id),Number(ctx.params.id));
+  ctx.status = 204;
+};
 //Validation of the paramater id
 deleteTeamFromRace.validationScheme = {
-    params: Joi.object({
-      id: Joi.number().integer().positive().required()
-    })
-  };
+  params: Joi.object({
+    id: Joi.number().integer().positive().required()
+  })
+};
 
 //delete all teams from a race
 const deleteAllTeamsFromRace = async (ctx) => {
-    await raceService.deleteAllTeamsFromRace(Number(ctx.params.id))
-    ctx.status = 204;
-}
+  await raceService.deleteAllTeamsFromRace(Number(ctx.params.id));
+  ctx.status = 204;
+};
 //Validation of the paramater id
 deleteAllTeamsFromRace.validationScheme = {
-    params: Joi.object({
-      id: Joi.number().integer().positive().required()
-    })
-  };
+  params: Joi.object({
+    id: Joi.number().integer().positive().required()
+  })
+};
 /**
  * Install races routes in the given router.
  *
@@ -157,7 +157,7 @@ module.exports = (app) => {//created nested route
 
   //GET
   router.get('/', validate(getRaces), getRaces);
-  router.get('/withTeams/:raceId', validate(getRaceWithTeams.validationScheme), getRaceWithTeams)
+  router.get('/withTeams/:raceId', validate(getRaceWithTeams.validationScheme), getRaceWithTeams);
   router.get('/:raceId', requireAuthentication, validate(getRaceById.validationScheme), getRaceById);
 
   //POST

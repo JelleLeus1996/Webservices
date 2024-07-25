@@ -151,6 +151,8 @@ const deleteById = async (teamId) =>
     throw ServiceError.notFound(`No team with id ${teamId} exists`,{teamId});
   }
 };
+
+let updatedTeam = [];
 const updateById = async (teamId, {name, country, victories, points , team_status,
   abbreviation, director, assistant, representative, bike, budget, overhead_cost, rider_cost, email}) =>
 {

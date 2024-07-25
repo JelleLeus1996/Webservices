@@ -160,34 +160,33 @@ const findByEmail = (email) => {
 
 const findAllTeamsWithFinancials = async () => {
   const teamsWithBudget = await getKnex()(tables.team)
-  .select(
-    `${tables.team}.teamId`,
-    'name',
-    'country',
-    'victories',
-    'points',
-    'team_status',
-    'abbreviation',
-    'director',
-    'assistant',
-    'representative',
-    'bike',
-    'email').sum({ budget:`${tables.sponsor}.contribution`})
+    .select(
+      `${tables.team}.teamId`,
+      'name',
+      'country',
+      'victories',
+      'points',
+      'team_status',
+      'abbreviation',
+      'director',
+      'assistant',
+      'representative',
+      'bike',
+      'email').sum({ budget:`${tables.sponsor}.contribution`})
     .leftJoin(tables.sponsor, `${tables.team}.teamId`, `${tables.sponsor}.teamId`)
     .groupBy(`${tables.team}.teamId`)
     .orderBy('name', 'ASC');
 
-    const teamsWithRidercost = await Promise.all(teamsWithBudget.map(async(team)=>{
-      const totalRiderCost = await getKnex()(tables.rider)
+  const teamsWithRidercost = await Promise.all(teamsWithBudget.map(async(team)=>{
+    const totalRiderCost = await getKnex()(tables.rider)
       .where(`${tables.rider}.teamId`,team.teamId)
       .sum( {rider_cost : getKnex().raw('monthly_wage'*12) });
-
-      return {
-        ...team,
-        rider_cost : totalRiderCost[0].rider_cost || 0
-      };
-    }));
-    return teamsWithRidercost;
-  }
+    return {
+      ...team,
+      rider_cost : totalRiderCost[0].rider_cost || 0
+    };
+  }));
+  return teamsWithRidercost;
+};
  
 module.exports={findAllTeamData, findAllTeams,findAllTeamsInfo,findById, findByName, findTeamsWithRiders, create, findCount,updateById,deleteById, findByEmail, findAllTeamsWithFinancials};

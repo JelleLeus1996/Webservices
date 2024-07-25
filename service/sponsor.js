@@ -16,23 +16,23 @@ const getById = async (id) => {
 
 //GET sponsors by teamId
 const getByTeamId = async (id) => {
-    const sponsor = await sponsorRepo.findAllFromTeam(id);
-    if (!sponsor)
-    {
-      throw Error(`There is no sponsor with id ${id}`, {id});
-    }
-    return sponsor;
-  };
+  const sponsor = await sponsorRepo.findAllFromTeam(id);
+  if (!sponsor)
+  {
+    throw Error(`There is no sponsor with id ${id}`, {id});
+  }
+  return sponsor;
+};
   
 //GET sponsor by teamId
 const getByName = async (name) => {
-    const sponsor = await sponsorRepo.findByName(name);
-    if (!sponsor)
-    {
-      throw Error(`There is no sponsor with the name ${name}`, {name});
-    }
-    return sponsor;
-  };
+  const sponsor = await sponsorRepo.findByName(name);
+  if (!sponsor)
+  {
+    throw Error(`There is no sponsor with the name ${name}`, {name});
+  }
+  return sponsor;
+};
 
 const getAll = async () => {
   const sponsors = await sponsorRepo.findAllSponsorsNonFinancial();
@@ -59,7 +59,7 @@ const updateById = async (sponsorId, {name,industry,contribution,teamId}) =>
     throw new Error(valid.error.details[0].message);
   }
   //Check if the sponsor exists
-  const existing = await sponsorRepo.findById(id);
+  const existing = await sponsorRepo.findById(sponsorId);
   if (!existing)
   {
     throw new Error('Sponsor doesn\'t exist');
@@ -72,7 +72,7 @@ const updateById = async (sponsorId, {name,industry,contribution,teamId}) =>
   if (typeof name === 'string')
   {
     newSponsor = {
-        name,industry,contribution,teamId
+      name,industry,contribution,teamId
     };
   
   }
@@ -84,7 +84,7 @@ const updateById = async (sponsorId, {name,industry,contribution,teamId}) =>
     teamId
   };
   try {
-    await sponsorRepo.updateById(id, updatedSponsor);
+    await sponsorRepo.updateById(sponsorId, updatedSponsor);
     return updatedSponsor;
   }catch(error){
     throw handleDBError(error);
@@ -104,8 +104,8 @@ const create = async ({sponsorId,name,industry,contribution,teamId}) => {
     throw new Error ('Team does not exist');
   try {
     const sponsor = await sponsorRepo.create({
-        sponsorId,name,industry,contribution,teamId});
-    return getById(sponsorId);
+      sponsorId,name,industry,contribution,teamId});
+    return getById(sponsor);
   }catch (error) {
     throw handleDBError(error);
   }
@@ -122,4 +122,4 @@ const deleteById = async (id) => {
   return sponsor;
 };
 
-module.exports={getById, getByTeamId, getByName, getAll, getAllWithFinancials, getAllWithTeams, create, getById, updateById, deleteById};
+module.exports={getById, getByTeamId, getByName, getAll, getAllWithFinancials, getAllWithTeams, create, updateById, deleteById};

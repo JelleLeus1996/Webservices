@@ -21,28 +21,28 @@ const formatSponsor = ({
 
 //GET sponsor by id
 const findById = async (id) => {
-    const rider = await getKnex()(tables.sponsor)
-      .where('sponsorId', id)
-      .first();
-  
-    return rider;
-  };
+  const rider = await getKnex()(tables.sponsor)
+    .where('sponsorId', id)
+    .first();
+
+  return rider;
+};
 
 //GET sponsors by teamId
 const findAllFromTeam = async(teamId) => {
-    return await getKnex() (tables.sponsor)
-      .select()
-      .where('teamId',teamId)
-      .orderBy('name','ASC');
-  };
+  return await getKnex() (tables.sponsor)
+    .select()
+    .where('teamId',teamId)
+    .orderBy('name','ASC');
+};
 
 //GET sponsor by name
 const findByName = async(name) => {
-    return await getKnex() (tables.sponsor)
-      .select()
-      .where('name', name)
-      .orderBy('name','ASC');
-  };
+  return await getKnex() (tables.sponsor)
+    .select()
+    .where('name', name)
+    .orderBy('name','ASC');
+};
 
 //GET all sponsors without contribution
 const findAllSponsorsNonFinancial = async() => {
@@ -87,17 +87,17 @@ const updateById = async (sponsorId, {name,industry,contribution,teamId})=>{
 
 //DELETE sponsor by id
 const deleteById = async (id) =>
-    {
-      try {
-        const rowsAffected = await getKnex()(tables.sponsor)
-          .where(`${tables.sponsor}.sponsorId`,id)
-          .delete();
-     
-        return rowsAffected > 0;
-      }catch (error){
-        getLogger().error('Error in deleteById',{error,});
-        throw error;
-      }
-    };
+{
+  try {
+    const rowsAffected = await getKnex()(tables.sponsor)
+      .where(`${tables.sponsor}.sponsorId`,id)
+      .delete();
+ 
+    return rowsAffected > 0;
+  }catch (error){
+    getLogger().error('Error in deleteById',{error,});
+    throw error;
+  }
+};
 
 module.exports={findById, findAllFromTeam, findByName, findAllSponsorsNonFinancial, findAllSponsorsWithFinancial, findAllWithTeam, updateById, create, deleteById};
