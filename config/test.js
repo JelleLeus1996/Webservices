@@ -11,7 +11,7 @@ module.exports={
     client: 'mysql2',
     host: 'localhost',
     port: 3306,
-    name: 'cyclingdatabase_test', //you'll have a second databank called cyclingdatabase_test
+    name: 'cyclingDatabase_test', //you'll have a second databank called cyclingDatabase_test
     username: 'root',
     password: '',
   },
