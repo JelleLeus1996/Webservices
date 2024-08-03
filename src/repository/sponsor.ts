@@ -1,5 +1,7 @@
-const {getKnex, tables} = require('../data/index');
-const {getLogger} = require('../core/logging');
+import { tables } from '../data/index';
+import { getLogger }  from '../core/logging';
+import { Knex } from 'knex';
+import {Sponsor, Team} from '../types/types'
 
 //Define columns
 const SELECT_COLUMNS = [
@@ -20,62 +22,62 @@ const formatSponsor = ({
 };
 
 //GET sponsor by id
-const findById = async (id) => {
-  const rider = await getKnex()(tables.sponsor)
-    .where('sponsorId', id)
+export const findById = async (knex:Knex, sponsorId:number) => {
+  const rider = await knex(tables.sponsor)
+    .where('sponsorId', sponsorId)
     .first();
 
   return rider;
 };
 
 //GET sponsors by teamId
-const findAllFromTeam = async(teamId) => {
-  return await getKnex() (tables.sponsor)
+const findAllFromTeam = async(knex:Knex, teamId:number) => {
+  return await knex(tables.sponsor)
     .select()
     .where('teamId',teamId)
     .orderBy('name','ASC');
 };
 
 //GET sponsor by name
-const findByName = async(name) => {
-  return await getKnex() (tables.sponsor)
+const findByName = async(knex:Knex, name:string) => {
+  return await knex(tables.sponsor)
     .select()
     .where('name', name)
     .orderBy('name','ASC');
 };
 
 //GET all sponsors without contribution
-const findAllSponsorsNonFinancial = async() => {
-  return await getKnex() (tables.sponsor)
+const findAllSponsorsNonFinancial = async(knex:Knex) => {
+  return await knex(tables.sponsor)
     .select('sponsorId', 'name', 'industry', 'teamId')
     .orderBy('name','ASC');
 };
 
 //GET all sponsors with contribution
-const findAllSponsorsWithFinancial = async() => {
-  return await getKnex() (tables.sponsor)
+const findAllSponsorsWithFinancial = async(knex:Knex) => {
+  return await knex(tables.sponsor)
     .select()
     .orderBy('name','ASC');
 };
 
 //GET sponsors with teams
-const findAllWithTeam = async () => {
-  const sponsors = await getKnex()(tables.sponsor)
+const findAllWithTeam = async (knex:Knex, ) => {
+  const sponsors = await knex(tables.sponsor)
     .join(tables.team, `${tables.sponsor}.teamId`, '=', `${tables.team}.teamId`)
     .select(SELECT_COLUMNS);
   return sponsors.map(formatSponsor);
 };
 
 //POST (CREATE) new sponsor
-const create = async({sponsorId,name,industry,contribution,teamId}) => {
-  return await getKnex()(tables.sponsor)
+const create = async(knex:Knex, {sponsorId,name,industry,contribution,teamId}) => {
+  return await knex(tables.sponsor)
     .insert({sponsorId,name,industry,contribution,teamId});
 };
 
 //Update existing sponsor
-const updateById = async (sponsorId, {name,industry,contribution,teamId})=>{
+const updateById = async (knex:Knex, sponsorId:number, {name,industry,contribution,teamId})=>{
   try {
-    await getKnex()(tables.sponsor)
+    await knex(tables.sponsor)
       .update({name,industry,contribution,teamId})
       .where(`${tables.sponsor}.sponsorId`,sponsorId);
     return sponsorId;
@@ -86,11 +88,11 @@ const updateById = async (sponsorId, {name,industry,contribution,teamId})=>{
 };
 
 //DELETE sponsor by id
-const deleteById = async (id) =>
+const deleteById = async (knex:Knex, sponsorId:number) =>
 {
   try {
-    const rowsAffected = await getKnex()(tables.sponsor)
-      .where(`${tables.sponsor}.sponsorId`,id)
+    const rowsAffected = await knex(tables.sponsor)
+      .where(`${tables.sponsor}.sponsorId`,sponsorId)
       .delete();
  
     return rowsAffected > 0;

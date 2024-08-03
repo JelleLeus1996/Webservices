@@ -1,13 +1,14 @@
-const { tables } = require('..');
-const Role = require('../../core/roles');
+import {Knex} from 'knex';
+import tables from '..';
+import Role from '../../core/roles'
+import {Team} from '../../types/types'
 
-module.exports = {
-  seed: async(knex)=>{
+export async function seed(knex: Knex): Promise<void>{
     //first delete all entries
     await knex(tables.team).del();
 
     //add data
-    await knex(tables.team).insert([
+    const teams: Team[]= [
       { 'teamId':1, 'name':'Canyon//SRAM Racing', 'country':'Germany', 'victories':8, 'points':5710, 'team_status':'WTW', 'abbreviation':'CSR', 'director':'Ronny Lauke', 'assistant':'Beth Duryea', 'representative':'Magnus Bäckstedt', 'bike':'Canyon', 'overhead_cost':6500000.00, 'email': 'Magnus.Bäckstedt@hotmail.com', 'password_hash': '$argon2id$v=19$m=131072,t=6,p=1$9AMcua9h7va8aUQSEgH/TA$TUFuJ6VPngyGThMBVo3ONOZ5xYfee9J1eNMcA5bSpq4', 'roles': JSON.stringify([Role.TEAMREPRESENTATIVE])},
       { 'teamId':2, 'name':'EF Education TIBCO SVB', 'country':'USA', 'victories':5, 'points':1797, 'team_status':'WTW', 'abbreviation':'TIB', 'director':'Daniel Holm Foder', 'assistant':'Katheryn Curi  Mattis', 'representative':'Tim Harris', 'bike':'Cannondale', 'overhead_cost':6000000.00, 'email': 'Tim.Harris@hotmail.com', 'password_hash': '$argon2id$v=19$m=131072,t=6,p=1$9AMcua9h7va8aUQSEgH/TA$TUFuJ6VPngyGThMBVo3ONOZ5xYfee9J1eNMcA5bSpq4', 'roles': JSON.stringify([Role.TEAMREPRESENTATIVE])},
       { 'teamId':3, 'name':'FDJ Suez', 'country':'France', 'victories':19, 'points':5429, 'team_status':'WTW', 'abbreviation':'FST', 'director':'Stephen Delcourt', 'assistant':'Cédric Barre', 'representative':'Nicolas Maire', 'bike':'Lapierre', 'overhead_cost':8000000.00, 'email': 'Nicolas.Maire@hotmail.com', 'password_hash': '$argon2id$v=19$m=131072,t=6,p=1$9AMcua9h7va8aUQSEgH/TA$TUFuJ6VPngyGThMBVo3ONOZ5xYfee9J1eNMcA5bSpq4', 'roles': JSON.stringify([Role.TEAMREPRESENTATIVE])},
@@ -31,5 +32,6 @@ module.exports = {
       { 'teamId':21, 'name':'Parkhotel Valkenburg', 'country':'Netherlands', 'victories':2, 'points':897, 'team_status':'CTW', 'abbreviation':'PHV', 'director':'Raymond Rol', 'assistant':'Bart Faes', 'representative':'Jos Mooij', 'bike':'Factor', 'overhead_cost':800000.00, 'email': 'Jos.Mooij@hotmail.com', 'password_hash': '$argon2id$v=19$m=131072,t=6,p=1$9AMcua9h7va8aUQSEgH/TA$TUFuJ6VPngyGThMBVo3ONOZ5xYfee9J1eNMcA5bSpq4', 'roles': JSON.stringify([Role.TEAMREPRESENTATIVE])},
       { 'teamId':22, 'name':'Proximus  Cyclis', 'country':'Belgium', 'victories':0, 'points':9, 'team_status':'CTW', 'abbreviation':'PRO', 'director':'Eddy Van Bunder', 'assistant':'Gert Pemen', 'representative':'Gert Vervoort', 'bike':'Ridley', 'overhead_cost':650000.00, 'email': 'Gert.Vervoort@hotmail.com', 'password_hash': '$argon2id$v=19$m=131072,t=6,p=1$9AMcua9h7va8aUQSEgH/TA$TUFuJ6VPngyGThMBVo3ONOZ5xYfee9J1eNMcA5bSpq4', 'roles': JSON.stringify([Role.TEAMREPRESENTATIVE])},
       { 'teamId':23, 'name':'Union Cycliste Internationale', 'country':'Switzerland', 'victories':0, 'points':0, 'team_status':'UCI', 'abbreviation':'UCI', 'director':'David Lappartient', 'assistant':'Adam Hansen', 'representative':'Jelle Leus', 'bike':'Shimano', 'overhead_cost':60000000,  'email': 'jelle.leus@student.hogent.be', 'password_hash': '$argon2id$v=19$m=131072,t=6,p=1$9AMcua9h7va8aUQSEgH/TA$TUFuJ6VPngyGThMBVo3ONOZ5xYfee9J1eNMcA5bSpq4', 'roles': JSON.stringify([Role.TEAMREPRESENTATIVE,Role.ADMIN])},
-    ]);
-  }};
+    ];
+    await knex(tables.team).insert(teams);
+  };

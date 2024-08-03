@@ -1,28 +1,41 @@
-const {getLogger} = require('../core/logging');
-const {getKnex, tables} = require('../data');
- 
+import {Knex} from 'knex';
+import {tables} from '../data';
+import {getLogger} from '../core/logging';
+import {Race, TeamWithSponsorsAndRaces, Team, Rider, Sponsor, TeamWithRiders} from '../types/types'
+
+const SELECT_COLUMNS_TEAMS = [
+  `${tables.team}.teamId AS teamId`, 'name', 'country', 'victories', `${tables.team}.points AS teamPoints`,'team_status',
+      'abbreviation', 'director', 'assistant', 'representative', 'bike','email'
+];
+
+const SELECT_COLUMNS = [
+  `${tables.team}.teamId AS teamId`, 'name', 'country', 'victories', `${tables.rider}.points AS rider_points`, 'team_status',
+  'abbreviation', 'director', 'assistant', 'representative', 'bike', 'overhead_cost', 'email',
+  `${tables.rider}.id AS rider_id`, `${tables.rider}.nationality`, `${tables.rider}.last_name`, `${tables.rider}.first_name`,
+  `${tables.rider}.birthday`, `${tables.rider}.points AS rider_points`, `${tables.rider}.monthly_wage AS wage`
+];
+
 //get basic team data of all teams
-const findAllTeams = async() => {
-  return await getKnex()(tables.team)
-    .select('teamId', 'name', 'country', 'victories', 'points','team_status',
-      'abbreviation', 'director', 'assistant', 'representative', 'bike','email')
+export const findAllTeams = async (knex: Knex): Promise<Team[]> => {
+  return knex(tables.team)
+    .select(SELECT_COLUMNS_TEAMS)
     .orderBy('name','ASC');
 };
-const findAllTeamData = async () => {
+export const findAllTeamData = async(knex: Knex): Promise<Team[]> => {
   // Get all teams with basic info
-  const teams = await getKnex()(tables.team)
+  const teams = await knex(tables.team)
     .select(SELECT_COLUMNS)
     .orderBy('name', 'ASC');
 
   // Get the sponsors & races for each team
-  const teamWithDetails = await Promise.all(teams.map(async (team) => {
+  const teamWithDetails: Team[] = await Promise.all(teams.map(async (team): Promise<Team> => {
     // Get sponsors for the team
-    const sponsors = await getKnex()(tables.sponsor)
+    const sponsors: Sponsor[] = await knex(tables.sponsor)
       .select('sponsorId', 'name', 'industry', 'contribution')
       .where('teamId', team.teamId);
 
     // Get races for the team
-    const races = await getKnex()(tables.race)
+    const races: Race[] = await knex(tables.race)
       .select('raceId', 'name', 'date', 'location')
       .join(tables.race_teams, `${tables.race}.raceId`, `${tables.race_teams}.raceId`)
       .where(`${tables.race_teams}.teamId`, team.teamId);
@@ -38,9 +51,9 @@ const findAllTeamData = async () => {
 };
 
 //get all team data of all teams
-const findTeamsWithRiders = async (teamId) => {
+export const findTeamsWithRiders = async (knex: Knex, teamId: number): Promise<Team | null> => {
   // Get team data for the specified teamId
-  const team = await getKnex()(tables.team)
+  const team: Team | undefined = await knex(tables.team)
     .where(`${tables.team}.teamId`, teamId)
     .first(SELECT_COLUMNS);
 
@@ -49,19 +62,19 @@ const findTeamsWithRiders = async (teamId) => {
   }
 
   // Get sponsors for the team to calculate the budget
-  const sponsors = await getKnex()(tables.sponsor)
+  const sponsors = await knex(tables.sponsor)
     .where('teamId', teamId)
     .sum('contribution as budget');
 
   // Get riders for the team to calculate the rider cost
-  const riders = await getKnex()(tables.rider)
+  const riders = await knex(tables.rider)
     .where('teamId', teamId)
-    .sum(getKnex().raw('monthly_wage * 12 as rider_cost'));
+    .sum(knex.raw('monthly_wage * 12 as rider_cost'));
 
   // Transform the team data to include riders, budget, and rider cost
-  const transformedTeam = transformTeam(team);
-  transformedTeam.budget = sponsors[0].budget || 0;
-  transformedTeam.rider_cost = riders[0].rider_cost || 0;
+  const transformedTeam : Team = transformTeam(team);
+  transformedTeam.budget = sponsors[0]?.budget || 0;
+  transformedTeam.rider_cost = riders[0]?.rider_cost || 0;
 
   return transformedTeam;
 };
@@ -71,30 +84,32 @@ const findAllTeamsInfo = async() => {
     .select()
     .orderBy('name','ASC');
 };
-const SELECT_COLUMNS = [
-  `${tables.team}.teamId AS teamId`, 'name', 'country', 'victories', `${tables.rider}.points AS rider_points`, 'team_status',
-  'abbreviation', 'director', 'assistant', 'representative', 'bike', 'overhead_cost', 'email',
-  `${tables.rider}.id AS rider_id`, `${tables.rider}.nationality`, `${tables.rider}.last_name`, `${tables.rider}.first_name`,
-  `${tables.rider}.birthday`, `${tables.rider}.points AS rider_points`, `${tables.rider}.monthly_wage AS wage`
-];
-const SELECT_COLUMNS_TEAMS = [
-  `${tables.team}.teamId AS teamId`, 'name', 'country', 'victories', 'points', 'team_status',
-  'abbreviation', 'director', 'assistant', 'representative', 'bike', 'budget', 'overhead_cost', 'rider_cost', 'email',
-];
  
 //OO mapping
-const transformTeam = ({rider_id, nationality, last_name, first_name, birthday, rider_points, monthly_wage, ...rest}) =>{
-  return{
+export const transformTeam = ({
+  rider_id, 
+  nationality, 
+  last_name, 
+  first_name, 
+  birthday, 
+  rider_points, 
+  monthly_wage, 
+  ...rest
+}: any): TeamWithRiders =>{
+  // Create a Rider object
+  const rider: Rider = {
+    id: rider_id,
+    nationality,
+    last_name,
+    first_name,
+    birthday,
+    points: rider_points,
+    monthly_wage,
+  };
+  // Return the transformed team with the rider
+  return {
     ...rest,
-    riders:[{
-      id: rider_id,
-      nationality,
-      last_name,
-      first_name,
-      birthday,
-      points: rider_points,
-      monthly_wage
-    }]
+    riders: [rider],
   };
 };
 
@@ -119,17 +134,29 @@ const findCount = async () =>{
  
 
  
-const create = async({teamId,name, country, victories, points , team_status,
-  abbreviation, director, assistant, representative, bike, budget, overhead_cost, rider_cost, email, passwordHash, roles}) => {
-  return await getKnex()(tables.team)
-    .insert({teamId,name, country, victories, points , team_status,
-      abbreviation, director, assistant, representative, bike, budget, overhead_cost, rider_cost,
-      email, password_hash:passwordHash, roles:JSON.stringify(roles)});
+export const create = async (knex: Knex, teamData: Omit<Team, 'teamId'>): Promise<number[]> =>{
+  return knex(tables.team).insert({
+    name:teamData.name,
+    country:teamData.country,
+    victories:teamData.victories,
+    points:teamData.points,
+    team_status:teamData.team_status,
+    abbreviation:teamData.abbreviation,
+    director:teamData.director,
+    assistant:teamData.assistant,
+    representative:teamData.representative,
+    bike:teamData.bike,
+    overhead_cost:teamData.overhead_cost,
+    email:teamData.email,
+    passwordHash:teamData.password_hash,
+    roles: JSON.stringify(teamData.roles),
+  });
 };
+  
 const updateById = async (teamId, {name, country, victories, points , team_status,
   abbreviation, director, assistant, representative, bike, budget, overhead_cost, rider_cost,email})=>{
   try {
-    await getKnex()(tables.team)
+    await knex()(tables.team)
       .update({name, country, victories, points , team_status,
         abbreviation, director, assistant, representative, bike, budget, overhead_cost, rider_cost,email
       })
@@ -178,7 +205,7 @@ const findAllTeamsWithFinancials = async () => {
     .orderBy('name', 'ASC');
 
   const teamsWithRidercost = await Promise.all(teamsWithBudget.map(async(team)=>{
-    const totalRiderCost = await getKnex()(tables.rider)
+    const totalRiderCost = await knex(tables.rider)
       .where(`${tables.rider}.teamId`,team.teamId)
       .sum( {rider_cost : getKnex().raw('monthly_wage'*12) });
     return {

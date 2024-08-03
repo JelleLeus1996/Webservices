@@ -1,7 +1,7 @@
-const {tables} = require('..');
+import {Knex} from 'knex'
+import {tables} from '../index'
 
-module.exports = {
-  up:async(knex)=>{
+export async function up(knex: Knex): Promise<void>{
     await knex.schema.alterTable(tables.team, (table) => {
       table.string('email').notNullable();
       table.string('password_hash').notNullable();
@@ -9,8 +9,8 @@ module.exports = {
 
       table.unique('email', 'idx_team_email_unique');
     });
-  },
-  down: async(knex) => {
+  }
+  export async function down(knex: Knex): Promise<void>{{
     return knex.schema.alterTable(tables.team, table=>{
       table.dropColumns('email', 'password_hash','roles');
     });

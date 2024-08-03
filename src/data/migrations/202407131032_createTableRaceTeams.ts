@@ -1,7 +1,7 @@
-const { tables } = require('../index');
+import {Knex} from 'knex'
+import {tables} from '../index'
 
-module.exports = {
-  up: async (knex) => {
+export async function up(knex: Knex): Promise<void>{
     await knex.schema.createTable(tables.race_teams, (table) => {
       table.increments('id').notNullable(); // Optional primary key for the junction table
       table.integer('raceId').unsigned().notNullable();
@@ -18,5 +18,3 @@ module.exports = {
       table.unique(['raceId', 'teamId'], 'idx_race_teams_unique');
     });
   }
-  
-};

@@ -3,14 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Find a rider</title>
+  <title>Fietsapplicatie Homepage</title>
+  <style>
+    body {
+      background-image: url('background.jpg'); /* Replace with your image path */
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .button {
+      display: inline-block;
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      text-decoration: none;
+      color: white;
+      background-color: #007bff;
+      border: none;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+    .button:hover {
+      background-color: #0056b3;
+    }
+  </style>
 </head>
 <body>
-  <h1>Which rider would you like to find?</h1>
-  <input type="text" id="riderName" placeholder="Search a rider by name (firstname & lastname)">
-  <button onclick="searchRider()">Search</button>
-  <div id="result"></div>
-
+  <h1>Welkom bij de Fietsapplicatie</h1>
+  <a href="search-rider.html" class="button">Zoek een renner</a>
+  <a href="list-teams.html" class="button">Bekijk teams</a>
+  <!-- Add more buttons as needed -->
   <script src="app.js"></script>
 </body>
 </html>
+
+

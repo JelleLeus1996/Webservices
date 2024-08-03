@@ -1,7 +1,7 @@
-const {tables} = require('../index');
+import {Knex} from 'knex'
+import {tables} from '../index'
 
-module.exports = {
-  up: async(knex) => {
+export async function up(knex: Knex): Promise<void>{
     await knex.schema.createTable(tables.sponsor, (table) => {
       table.increments('sponsorId').notNullable();
       table.string('name',255).notNullable();
@@ -12,8 +12,7 @@ module.exports = {
         .references(`${tables.team}.teamId`)
         .onDelete('RESTRICT');//if rider gets the delete, deletes also the team if you chose 'CASCADE', we chose default option 'RESTRICT'
     });
-  },
-  down:(knex) => {
+  }
+  export async function down(knex: Knex): Promise<void>{
     return knex.schema.dropTableIfExists(tables.sponsor);
   }
-};

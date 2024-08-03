@@ -1,8 +1,9 @@
-const { tables } = require('..');
+import {Knex} from 'knex';
+import tables from '..';
 
 
 // Functie om 4 willekeurige continentale teams te kiezen
-function getRandomContinentalTeamIds(excludeIds, numberOfTeams){
+function getRandomContinentalTeamIds(excludeIds: number[], numberOfTeams: number){
     const contiTeamIds = [17,18,19,20,21,22]
     const filterIds = contiTeamIds.filter(id=>!excludeIds.includes(id));
     let selectedIds = [];
@@ -14,8 +15,7 @@ function getRandomContinentalTeamIds(excludeIds, numberOfTeams){
     return selectedIds
   }
   
-module.exports = {
-  seed: async(knex)=>{
+  export async function seed(knex: Knex): Promise<void>{
     // First delete all entries
     await knex(tables.race_teams).del();
 
@@ -36,5 +36,4 @@ module.exports = {
 
     // Add data
     await knex(tables.race_teams).insert(raceTeamsData);
-  }
-};
+  };

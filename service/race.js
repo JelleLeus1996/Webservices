@@ -1,3 +1,7 @@
+import teamRepo from '/src/repository/team.ts';
+import raceRepo from '/src/repository/race.ts';
+import validation from '/';
+
 const teamRepo = require('../repository/team');
 const raceRepo = require('../repository/race');
 const validation = require ('../schema/raceSchema');
