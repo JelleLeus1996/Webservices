@@ -1,38 +1,36 @@
-const Router = require('@koa/router');
-const Joi = require('joi').extend(require('@joi/date'));
+import Router from '@koa/router';
+import Joi from 'joi';
+import dateExtension from '@joi/date';
+import Koa from 'koa';
 
-const sponsorService = require('../service/sponsor');
-const validate = require('../core/validation');
-const {requireAuthentication, makeRequireRole} = require('../core/auth');
-const Role = require('../core/roles');
+import sponsorService from '../service/sponsor';
+import validate from '../core/validation';
+import {requireAuthentication, makeRequireRole} from '../core/auth';
+import Role = require('../core/roles');
 
+const JoiDate = Joi.extend(dateExtension);
 
 //Verification team via paramater
-const checkTeamId = (ctx, next) => {
-  
+const checkTeamId = (ctx: Koa.Context, next: Koa.Next) => {
   const { teamId:paramTeamId } = ctx.params;
-
   // You can only get our own data unless you're an admin
   checkTeam(ctx, paramTeamId);
   return next();
 };
 
 //Verification team via session id or role
-const checkTeam = (ctx, teamId)=>{
+const checkTeam = (ctx: Koa.Context, teamId: number)=>{
   const { teamId:sessionTeamId, roles } = ctx.state.session;
   if (teamId !== sessionTeamId && !roles.includes(Role.ADMIN)) {
-    return ctx.throw(
-      403,
-      'You are not allowed to view this user\'s information',
+    ctx.throw(403, 'You are not allowed to view this user\'s information',
       {
         code: 'FORBIDDEN',
-      }
-    );
+      });
   }
 };
 
 //Verification via paramater of sponsor to get teamId
-const checkTeamIdViaSponsor = async (ctx, next) => {
+const checkTeamIdViaSponsor = async (ctx: Koa.Context, next: Koa.Next) => {
   const { id } = ctx.params;
   const sponsor = await sponsorService.getById(Number(id));
   checkTeam(ctx, sponsor.teamId);
@@ -40,15 +38,15 @@ const checkTeamIdViaSponsor = async (ctx, next) => {
 };
 
 //GET all sponsors
-const getSponsors = async (ctx) => {
+const getSponsors = async (ctx: Koa.Context) => {
   ctx.body = await sponsorService.getAll();
 };
-const getAllSponsorsInfo = async (ctx) => {
+const getAllSponsorsInfo = async (ctx: Koa.Context) => {
   ctx.body = await sponsorService.getAllWithFinancials();
 };
 
 //GET all sponsors with team info
-const getAllSponsorInfoWithTeams = async (ctx) =>
+const getAllSponsorInfoWithTeams = async (ctx: Koa.Context) =>
 {
   ctx.body = await sponsorService.getAllWithTeams();
 };
@@ -59,7 +57,7 @@ getAllSponsorsInfo.validationScheme = null;
 getAllSponsorInfoWithTeams.validationScheme = null;
 
 //GET individual sponsor (by id)
-const getSponsorById = async (ctx) => {
+const getSponsorById = async (ctx: Koa.Context) => {
   ctx.body = await sponsorService.getById(Number(ctx.params.id));
 };
 
@@ -71,7 +69,7 @@ getSponsorById.validationScheme = {
 };
 
 //GET individual sponsor by name
-const getSponsorByName = async (ctx) => {
+const getSponsorByName = async (ctx: Koa.Context) => {
   ctx.body = await sponsorService.getByName(
     String(ctx.params.name));
 };
@@ -84,7 +82,7 @@ getSponsorByName.validationScheme = {
 };
 
 //GET individual team (by id)
-const getSponsorsFromTeam = async (ctx) => {
+const getSponsorsFromTeam = async (ctx: Koa.Context) => {
   ctx.body = await sponsorService.getByTeamId(Number(ctx.params.teamId));
 };
 
@@ -98,7 +96,7 @@ getSponsorsFromTeam.validationScheme={
 
 
 //UPDATE sponsor
-const updateSponsor = async (ctx) => {
+const updateSponsor = async (ctx: Koa.Context) => {
   ctx.body = await sponsorService.updateById(Number(ctx.params.id), {
     ...ctx.request.body,
     name: String(ctx.request.body.name),
@@ -122,7 +120,7 @@ updateSponsor.validationScheme={
 };
 
 //POST sponsor
-const createSponsor = async (ctx) => {
+const createSponsor = async (ctx: Koa.Context) => {
   const newSponsor = await sponsorService.create({
     ...ctx.request.body,
     name: String(ctx.request.body.name),
@@ -144,7 +142,7 @@ createSponsor.validationScheme={
 };
 
 //DELETE sponsor
-const deleteSponsor = async (ctx) => {
+const deleteSponsor = async (ctx: Koa.Context) => {
   await sponsorService.deleteById(Number(ctx.params.id));
   ctx.status = 204;
 };
@@ -161,11 +159,11 @@ deleteSponsor.validationScheme = {
  *
  * @param {Router} app - The parent router.
  */
-module.exports = (app) => {//created nested route
+export default (app: Router) => {
   const router = new Router({
     prefix: '/sponsors',
   });
-
+  
   //Variable assigned for admin required requests
   const requireAdmin = makeRequireRole(Role.ADMIN);
 

@@ -1,4 +1,4 @@
-const Joi = require('joi');
+import Joi from 'joi';
 
 const teamSchema = Joi.object({
   teamId: Joi.number().positive().required(),
@@ -24,4 +24,4 @@ if (validationResult.error) {
   console.log(validationResult.value);
 }
 
-module.exports={teamSchema};
+export default {teamSchema};

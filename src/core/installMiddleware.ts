@@ -1,23 +1,24 @@
 
-const config = require('config'); //require config
-const bodyParser = require('koa-bodyparser'); //piece of middleware with async functions
-const koaCors = require('@koa/cors');
-const emoji = require('node-emoji');
-const swaggerJSDoc = require('swagger-jsdoc');
-const { koaSwagger } = require('koa2-swagger-ui');
+import config from 'config'; //require config
+import bodyParser from 'koa-bodyparser'; //piece of middleware with async functions
+import koaCors from '@koa/cors';
+import emoji from 'node-emoji';
+import swaggerJSDoc from 'swagger-jsdoc';
+import { koaSwagger } from 'koa2-swagger-ui';
+import Koa from 'koa';
 
-const { getLogger } = require('./logging'); 
-const ServiceError = require('./serviceError'); 
+import { getLogger } from './logging'; 
+import ServiceError from './serviceError'; 
 
 //read from the confiugrations the cors configurations
-const CORS_ORIGINS = config.get('cors.origins'); // 👈 2
-const CORS_MAX_AGE = config.get('cors.maxAge'); // 👈 2
-const NODE_ENV = config.get('env'); 
+const CORS_ORIGINS: string[] = config.get('cors.origins'); // 👈 2
+const CORS_MAX_AGE: number = config.get('cors.maxAge'); // 👈 2
+const NODE_ENV: string = config.get('env'); 
 
-module.exports = function installMiddleware(app){
+export default function installMiddleware(app: Koa): void {
   app.use(
     koaCors({
-      origin: (ctx) => {
+      origin: (ctx: Koa.Context) => {
         // 👈 4
         //check if it has access -> Origin
         if (CORS_ORIGINS.indexOf(ctx.request.header.origin) !== -1) {
@@ -30,10 +31,10 @@ module.exports = function installMiddleware(app){
       maxAge: CORS_MAX_AGE, // 👈 6
     })
   );
-  app.use(async (ctx, next)=>{
+  app.use(async (ctx: Koa.Context, next: Koa.Next)=>{
     getLogger().info(`${emoji.get('fast_forward')} ${ctx.method} ${ctx.url}`);
 
-    const getStatusEmoji = () =>{
+    const getStatusEmoji = (): String =>{
       if (ctx.status >= 500) return emoji.get('skull');
       if (ctx.status >= 400) return emoji.get('x');
       if (ctx.status >= 300) return emoji.get('rocket');
@@ -62,7 +63,7 @@ module.exports = function installMiddleware(app){
 
   app.use(bodyParser()); //add bodyparser
 
-  app.use(async (ctx, next) => {
+  app.use(async (ctx: Koa.Context, next: Koa.Next) => {
     try {
       await next(); 
     } catch (error) {
@@ -97,7 +98,7 @@ module.exports = function installMiddleware(app){
   });
   
   // Handle 404 not found with uniform response
-  app.use(async (ctx, next) => {
+  app.use(async (ctx: Koa.Context, next: Koa.Next) => {
     await next();
   
     if (ctx.status === 404) {

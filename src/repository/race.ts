@@ -128,4 +128,4 @@ export const removeAllTeamsFromRace = async (knex: Knex, raceId:number):Promise<
     .delete();
 };
 
-module.exports={findRaceById,  findRaceByIdWithTeams, findAllRaces, create, updateRaceById,  deleteRaceById, removeTeamFromRace, removeAllTeamsFromRace, addTeamToRace, addTeamsToRace};
+export default {findRaceById,  findRaceByIdWithTeams, findAllRaces, create, updateRaceById,  deleteRaceById, removeTeamFromRace, removeAllTeamsFromRace, addTeamToRace, addTeamsToRace};

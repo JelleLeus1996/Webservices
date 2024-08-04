@@ -1,4 +1,4 @@
-const Joi = require('joi');
+import Joi from 'joi';
 
 const raceSchema = Joi.object({
   raceId: Joi.number().integer().required(),
@@ -16,4 +16,4 @@ if (validationResult.error) {
   console.log(validationResult.value);
 }
 
-module.exports={raceSchema};
+export default {raceSchema};

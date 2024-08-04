@@ -119,4 +119,4 @@ export const updateById = async (knex: Knex, id:number, {nationality, last_name,
 };
  
 
-module.exports={create,updateById,findByName,findAll, findById, findAllFromTeam, findAllRidersInfo, findAllWithTeam};
+export default {create,updateById,findByName,findAll, findById, findAllFromTeam, findAllRidersInfo, findAllWithTeam};

@@ -20,4 +20,4 @@ if (validationResult.error) {
   console.log(validationResult.value);
 }
 
-module.exports={riderSchema};
+export default {riderSchema};

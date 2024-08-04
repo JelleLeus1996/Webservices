@@ -1,17 +1,23 @@
-const config = require('config'); //require config
-const Koa = require('koa');
+import config from 'config'; //require config
+import Koa from'koa';
 
-const installRest = require('./rest/index');
-const { initializeData,shutdownData } = require('./data');
-const { initializeLogger, getLogger } = require('./core/logging');
-const installMiddleware = require('./core/installMiddleware');
+import installRest from './rest/index';
+import { initializeData, shutdownData } from './data';
+import { initializeLogger, getLogger } from './core/logging';
+import installMiddleware from './core/installMiddleware';
  
 //Read config from config folder
-const LOG_LEVEL = config.get('logging.level');
-const LOG_DISABLED = config.get('logging.disabled');
-const NODE_ENV = config.get('env'); //process.env.NODE_ENV;
- 
-module.exports = async function createServer() {
+const LOG_LEVEL = config.get<string>('logging.level');
+const LOG_DISABLED = config.get<boolean>('logging.disabled');
+const NODE_ENV = config.get<string>('env'); // process.env.NODE_ENV;
+
+interface Server {
+  getApp: () => Koa;
+  start: () => Promise<void>;
+  stop: () => Promise<void>;
+}
+
+export default async function createServer():Promise<Server> {
   //create logging
   initializeLogger({
     level: LOG_LEVEL,
@@ -35,7 +41,7 @@ module.exports = async function createServer() {
       return app;
     },
     start(){
-      return new Promise((resolve)=>{
+      return new Promise<void>((resolve)=>{
         const port = config.get('port');
         app.listen(port);
         getLogger().info(`server is running at http:\\localhost:${port}`);
@@ -48,6 +54,4 @@ module.exports = async function createServer() {
       getLogger().info('Goodbye');
     },
   };
- 
- 
 };

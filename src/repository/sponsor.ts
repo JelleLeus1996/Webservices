@@ -102,4 +102,4 @@ const deleteById = async (knex:Knex, sponsorId:number) =>
   }
 };
 
-module.exports={findById, findAllFromTeam, findByName, findAllSponsorsNonFinancial, findAllSponsorsWithFinancial, findAllWithTeam, updateById, create, deleteById};
+export default {findById, findAllFromTeam, findByName, findAllSponsorsNonFinancial, findAllSponsorsWithFinancial, findAllWithTeam, updateById, create, deleteById};

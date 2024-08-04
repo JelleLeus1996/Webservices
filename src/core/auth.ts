@@ -1,6 +1,7 @@
-const teamService = require('../service/team');
+import teamService from '../service/team';
+import Koa from 'koa';
 
-const requireAuthentication = async (ctx, next)=>{
+const requireAuthentication = async (ctx: Koa.Context, next: Koa.Next): Promise<any> =>{
   const {authorization}=ctx.headers;
   //If you login you'll get a token and all session info like team name, country etc.
   const {authToken,...session} = await teamService.checkAndParseSession(authorization);
@@ -12,7 +13,7 @@ const requireAuthentication = async (ctx, next)=>{
 };
 
 //use currying here:
-const makeRequireRole = (role)=> async(ctx,next)=>{
+const makeRequireRole = (role: string)=> async(ctx: Koa.Context, next: Koa.Next): Promise<any> =>{
   const {roles=[]} = ctx.state.session;
 
   teamService.checkRole(role, roles);
@@ -20,4 +21,4 @@ const makeRequireRole = (role)=> async(ctx,next)=>{
   return next();
 };
 
-module.exports = {requireAuthentication,makeRequireRole};
+export {requireAuthentication,makeRequireRole};

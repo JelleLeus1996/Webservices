@@ -28,6 +28,7 @@ export interface Team {
     bike: string;
     overhead_cost: number;
     email: string;
+    password:string;
     password_hash: string;
     roles: string;
   }

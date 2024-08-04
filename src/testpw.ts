@@ -1,6 +1,6 @@
-const { hashPassword, verifyPassword } = require('./core/password');
+import { hashPassword, verifyPassword } from './core/password';
 
-async function main() {
+async function main(): Promise<void> {
   const password = 'verydifficult';
   const wrongPassword = 'verywrong';
   console.log('The password:', password);

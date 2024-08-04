@@ -1,11 +1,11 @@
-const teamRepo = require('../repository/team');
-const sponsorRepo = require('../repository/sponsor');
-const validation = require ('../schema/sponsorSchema');
+import teamRepo from '../repository/team';
+import sponsorRepo from '../repository/sponsor';
+import validation from '../schema/sponsorSchema';
 
-const handleDBError = require ('./_handleDBError');
+import handleDBError from './_handleDBError';
 
 //GET sponsor by id
-const getById = async (id) => {
+const getById = async (id: number) => {
   const sponsor = await sponsorRepo.findById(id);
   if (!sponsor)
   {
@@ -15,7 +15,7 @@ const getById = async (id) => {
 };
 
 //GET sponsors by teamId
-const getByTeamId = async (id) => {
+const getByTeamId = async (id: number) => {
   const sponsor = await sponsorRepo.findAllFromTeam(id);
   if (!sponsor)
   {
@@ -25,7 +25,7 @@ const getByTeamId = async (id) => {
 };
   
 //GET sponsor by teamId
-const getByName = async (name) => {
+const getByName = async (name: string) => {
   const sponsor = await sponsorRepo.findByName(name);
   if (!sponsor)
   {
@@ -112,7 +112,7 @@ const create = async ({sponsorId,name,industry,contribution,teamId}) => {
 };
 
 //DELETE
-const deleteById = async (id) => {
+const deleteById = async (id: number) => {
   const sponsor = getById(id);
 
   if (!sponsor) {
@@ -122,4 +122,4 @@ const deleteById = async (id) => {
   return sponsor;
 };
 
-module.exports={getById, getByTeamId, getByName, getAll, getAllWithFinancials, getAllWithTeams, create, updateById, deleteById};
+export default {getById, getByTeamId, getByName, getAll, getAllWithFinancials, getAllWithTeams, create, updateById, deleteById};

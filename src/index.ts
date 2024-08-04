@@ -1,15 +1,11 @@
+import createServer from'./createServer';
 
-const createServer = require('./createServer');
-
-
-
-async function main() {
+async function main(): Promise<void> {
   try {
     const server = await createServer();
     await server.start();
     
-    
-    async function onClose(){
+    async function onClose(): Promise<void> {
       await server.stop();
       process.exit(0);
     }

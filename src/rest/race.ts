@@ -1,23 +1,27 @@
-const Router = require('@koa/router');
-const Joi = require('joi').extend(require('@joi/date'));
+import Router from '@koa/router';
+import Joi from 'joi';
+import dateExtension from '@joi/date';
+import Koa from 'koa';
 
-const raceService = require('../service/race');
-const validate = require('../core/validation');
-const {requireAuthentication, makeRequireRole} = require('../core/auth');
-const Role = require('../core/roles');
+import raceService from '../service/race';
+import validate from '../core/validation';
+import {requireAuthentication, makeRequireRole} from '../core/auth';
+import Role = require('../core/roles');
+
+const JoiDate = Joi.extend(dateExtension);
 
 //GET all races
-const getRaces = async (ctx) => {
+const getRaces = async (ctx: Koa.Context) => {
   ctx.body = await raceService.getAll();
 };
 
 //GET race by id
-const getRaceById = async (ctx) => {
+const getRaceById = async (ctx: Koa.Context) => {
   ctx.body = await raceService.getById(Number(ctx.params.id));
 };
 
 //GET race by id with all teams
-const getRaceWithTeams = async (ctx) =>
+const getRaceWithTeams = async (ctx: Koa.Context) =>
 {
   ctx.body = await raceService.getByIdWithTeams(Number(ctx.params.id));
 };
@@ -40,11 +44,11 @@ getRaceWithTeams.validationScheme = {
 };
 
 //UPDATE race
-const updateRace = async (ctx) => {
+const updateRace = async (ctx: Koa.Context) => {
   ctx.body = await raceService.updateById(Number(ctx.params.id), {
     ...ctx.request.body,
     name: String(ctx.request.body.name),
-    date: Date(ctx.request.body.date),
+    date: new Date(ctx.request.body.date),
     location: String(ctx.request.body.location),
   });
 };
@@ -56,17 +60,17 @@ updateRace.validationScheme={
   }),
   body:{
     name: Joi.string().min(1).max(99).required(),
-    date: Joi.date().greater('1-1-2022').required(),
+    date: JoiDate.date().greater('1-1-2022').required(),
     location: Joi.string().min(1).max(99).required(),
   }
 };
 
 //POST race
-const createRace = async (ctx) => {
+const createRace = async (ctx: Koa.Context) => {
   const newRace = await raceService.create({
     ...ctx.request.body,
     name: String(ctx.request.body.name),
-    date: Date(ctx.request.body.industry),
+    date: new Date(ctx.request.body.industry),
     location: String(ctx.request.body.location),  
   });
   ctx.body = newRace;
@@ -74,16 +78,16 @@ const createRace = async (ctx) => {
 
 //Validation of the given rider info
 createRace.validationScheme={
-  body:{
+  body:Joi.object({
     id: Joi.number().integer().required(),
     name: Joi.string().min(1).max(99).required(),
-    date: Joi.date().greater('1-1-2022').required(),
+    date: JoiDate.date().greater('1-1-2022').required(),
     location: Joi.string().min(1).max(99).required(),
-  }
+  }),
 };
 
 //DELETE sponsor
-const deleteRace = async (ctx) => {
+const deleteRace = async (ctx: Koa.Context) => {
   await raceService.deleteById(Number(ctx.params.id));
   ctx.status = 204;
 };
@@ -96,43 +100,48 @@ deleteRace.validationScheme = {
 };
 
 //Add team to a race
-const addTeamToRace = async (ctx) => {
-  await raceService.postTeamToRace(Number(ctx.params.id),Number(ctx.params.id));
+const addTeamToRace = async (ctx: Koa.Context) => {
+  await raceService.postTeamToRace(Number(ctx.params.raceId),Number(ctx.params.teamId));
   ctx.status = 204;
 };
 //Validation of the paramater id
 addTeamToRace.validationScheme = {
   params: Joi.object({
-    id: Joi.number().integer().positive().required()
+    raceId: Joi.number().integer().positive().required(),
+    teamId: Joi.number().integer().positive().required(),
   })
 };
 
 //Add teams to a race
-const addTeamsToRace = async (ctx) => {
-  await raceService.postTeamsToRace(Number(ctx.params.id),Number(ctx.params.id));
+const addTeamsToRace = async (ctx: Koa.Context) => {
+  await raceService.postTeamsToRace(Number(ctx.params.raceId),Number(ctx.params.teamIds));
   ctx.status = 204;
 };
 //Validation of the paramater id
 addTeamsToRace.validationScheme = {
   params: Joi.object({
     id: Joi.number().integer().positive().required()
-  })
+  }),
+  body: Joi.object({
+    teamIds: Joi.array().items(Joi.number().integer().positive()).required(),
+  }),
 };
 
 //delete team from a race
-const deleteTeamFromRace = async (ctx) => {
-  await raceService.deleteTeamFromRace(Number(ctx.params.id),Number(ctx.params.id));
+const deleteTeamFromRace = async (ctx: Koa.Context) => {
+  await raceService.deleteTeamFromRace(Number(ctx.params.raceId),Number(ctx.params.teamId));
   ctx.status = 204;
 };
 //Validation of the paramater id
 deleteTeamFromRace.validationScheme = {
   params: Joi.object({
-    id: Joi.number().integer().positive().required()
+    id: Joi.number().integer().positive().required(),
+    teamId: Joi.number().integer().positive().required(), 
   })
 };
 
 //delete all teams from a race
-const deleteAllTeamsFromRace = async (ctx) => {
+const deleteAllTeamsFromRace = async (ctx: Koa.Context) => {
   await raceService.deleteAllTeamsFromRace(Number(ctx.params.id));
   ctx.status = 204;
 };
@@ -147,7 +156,7 @@ deleteAllTeamsFromRace.validationScheme = {
  *
  * @param {Router} app - The parent router.
  */
-module.exports = (app) => {//created nested route
+export default (app: Router) => {
   const router = new Router({
     prefix: '/races',
   });
@@ -170,7 +179,7 @@ module.exports = (app) => {//created nested route
 
   //DELETE
   router.delete('/:id',requireAuthentication, requireAdmin, validate(deleteRace.validationScheme), deleteRace);
-  router.delete('/team/all', requireAuthentication, requireAdmin, validate(deleteAllTeamsFromRace), deleteAllTeamsFromRace);
+  router.delete('/team/all/:id', requireAuthentication, requireAdmin, validate(deleteAllTeamsFromRace), deleteAllTeamsFromRace);
   router.delete('/team/:id', requireAuthentication, requireAdmin, validate(deleteTeamFromRace.validationScheme),deleteTeamFromRace);
 
   app.use(router.routes())

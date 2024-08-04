@@ -1,6 +1,6 @@
-const ServiceError = require('../core/serviceError'); 
+import ServiceError from '../core/serviceError'; 
 
-const handleDBError = (error) => {
+const handleDBError = (error: any): any => {
   const { code = '', sqlMessage } = error; 
 
   //ER duplicate  (duplicates)
@@ -31,4 +31,4 @@ const handleDBError = (error) => {
   return error;
 };
 
-module.exports = handleDBError; // 👈 1
+export default handleDBError; // 👈 1

@@ -1,18 +1,18 @@
-const Router = require('@koa/router');
+import Router from '@koa/router';
+import Koa from 'koa';
 
-const installTeamRouter = require('./team');//import of function from transaction
-const installRiderRouter = require ('./rider');
-
-const installRaceRouter = require('../')
+import installTeamRouter from './team';
+import installRiderRouter from './rider';
 
 /**
  * Install all routes in the given Koa application.
  *
  * @param {Koa} app - The Koa application.
  */
-module.exports = (app) => {
+
+export default(app:Koa):void =>{
   const router = new Router({
-    prefix: '/api',
+    prefix:'/api'
   });
 
   installTeamRouter(router);

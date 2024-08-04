@@ -1,4 +1,4 @@
-const Joi = require('joi');
+import Joi from 'joi';
 
 const sponsorSchema = Joi.object({
   sponsorId: Joi.number().integer().required(),
@@ -17,4 +17,4 @@ if (validationResult.error) {
   console.log(validationResult.value);
 }
 
-module.exports={sponsorSchema};
+export default {sponsorSchema};

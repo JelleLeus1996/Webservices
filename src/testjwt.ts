@@ -1,4 +1,5 @@
-const { generateJWT, verifyJWT } = require('./core/jwt');
+import { generateJWT, verifyJWT } from './core/jwt';
+import {Team} from './types/types'
 
 function messWithPayload(jwt) {
   const [header, payload, signature] = jwt.split('.');
@@ -6,8 +7,12 @@ function messWithPayload(jwt) {
     Buffer.from(payload, 'base64url').toString() //convert base64url to text (string)
   );
 
-  // make me admin please ^^
-  parsedPayload.roles.push('admin');
+  // make me admin 
+  if (Array.isArray(parsedPayload.roles)) {
+    parsedPayload.roles.push('admin');
+  } else {
+    parsedPayload.roles = ['admin'];
+  }
 
   const newPayload = Buffer.from(
     JSON.stringify(parsedPayload),
@@ -16,8 +21,8 @@ function messWithPayload(jwt) {
   return [header, newPayload, signature].join('.');
 }
 
-async function main() {
-  const fakeTeam = {
+async function main():Promise<void> {
+  const fakeTeam :Team = {
     teamId:1, 
     name:'Canyon//SRAM Racing',
     country:'Germany', 
@@ -47,7 +52,13 @@ async function main() {
   console.log('Messed up JWT:', messedUpJwt);
 
   console.log('Verifying this JWT will throw an error:');
-  valid = await verifyJWT(messedUpJwt);
+  try{
+    valid = await verifyJWT(messedUpJwt);
+  } catch(error)
+  {
+    console.error('Error verifying JWT:',error);
+  }
+  
 }
 
 main();

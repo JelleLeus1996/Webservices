@@ -1,13 +1,17 @@
-const Router = require('@koa/router');
-const Joi = require('joi');
+import Router from '@koa/router';
+import Joi from 'joi';
+import dateExtension from '@joi/date';
+import Koa from 'koa';
 
-const teamService = require('../service/team');
-const validate = require('../core/validation');
-const {requireAuthentication, makeRequireRole} = require('../core/auth');
-const Role = require('../core/roles');
+import teamService from '../service/team';
+import validate from '../core/validation';
+import {requireAuthentication, makeRequireRole} from '../core/auth';
+import Role = require('../core/roles');
+
+const JoiDate = Joi.extend(dateExtension);
 
 //Login to authenticate and to (dis)allow certain requests
-const login = async (ctx, next) => {
+const login = async (ctx: Koa.Context, next: Koa.Next) => {
   const {email, password} = ctx.
     request.body;
   console.log('Received request body:', {email, password});
@@ -25,30 +29,27 @@ login.validationScheme = {
 };
 
 //Verification team via paramater & session id
-const checkTeamId = (ctx, next) => {
+const checkTeamId = (ctx: Koa.Context, next: Koa.Next) => {
   const { teamId:sessionTeamId, roles } = ctx.state.session;
   const { teamId:paramTeamId } = ctx.params;
 
   if (paramTeamId !== sessionTeamId && !roles.includes(Role.ADMIN)) {
-    return ctx.throw(
-      403,
-      'You are not allowed to view this user\'s information',
+    ctx.throw(403,'You are not allowed to view this user\'s information',
       {
         code: 'FORBIDDEN',
-      }
-    );
+      });
   }
   return next();
 };
 
 //GET all teams
-const getTeams = async (ctx) => {
+const getTeams = async (ctx: Koa.Context) => {
   ctx.body = await teamService.getTeams();
 };
-const getTeamWithRiders = async (ctx) => {
+const getTeamWithRiders = async (ctx: Koa.Context) => {
   ctx.body = await teamService.getAll(ctx.params.teamId);
 };
-const getAllTeamsInfo = async (ctx) => {
+const getAllTeamsInfo = async (ctx: Koa.Context) => {
   ctx.body = await teamService.getAllTeamsInfo();
 };
 //No input, so no validations of input
@@ -56,7 +57,7 @@ getTeams.validationScheme = null;
 getAllTeamsInfo.validationScheme = null;
 
 //GET individual team (by teamid)
-const getTeamById = async (ctx) => {
+const getTeamById = async (ctx: Koa.Context) => {
   ctx.body = await teamService.getById(ctx.params.teamId);
 };
 
@@ -68,7 +69,7 @@ getTeamById.validationScheme = {
 };
 
 //GET individual team (by name)
-const getTeamByName = async (ctx) => {
+const getTeamByName = async (ctx: Koa.Context) => {
   ctx.body = await teamService.getTeamByName(String(ctx.params.name));
 };
 
@@ -80,7 +81,7 @@ getTeamByName.validationScheme = {
 };
 
 //UPDATE team
-const updateTeam = async (ctx) => {
+const updateTeam = async (ctx: Koa.Context) => {
   ctx.body = await teamService.updateById(Number(ctx.params.teamId),{
     ...ctx.request.body,
     name: String(ctx.request.body.name),
@@ -122,7 +123,7 @@ updateTeam.validationScheme={
 };
 
 //POST team
-const createTeam = async (ctx) => {
+const createTeam = async (ctx: Koa.Context) => {
   const newTeam = await teamService.create({
     ...ctx.request.body,
     teamId: Number(ctx.request.body.teamId),
@@ -166,7 +167,7 @@ createTeam.validationScheme={
 };
 
 //DELETE team
-const deleteTeam = async (ctx) => {
+const deleteTeam = async (ctx: Koa.Context) => {
   teamService.deleteById(Number(ctx.params.teamId));
   ctx.stats = 204;
 };
@@ -183,11 +184,10 @@ deleteTeam.validationScheme = {
  *
  * @param {Router} app - The parent router.
  */
-module.exports = (app) => {//created nested route
+export default (app: Router) => {
   const router = new Router({
-    prefix: '/teams',
+    prefix: '/riders',
   });
-
   //Variable assigned for admin required requests
   const requireAdmin = makeRequireRole(Role.ADMIN);
 

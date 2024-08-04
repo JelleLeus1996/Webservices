@@ -1,12 +1,12 @@
-const ridersRepo = require('../repository/rider');
-const teamRepo = require('../repository/team');
-const validation = require ('../schema/riderSchema');
-
-const handleDBError = require ('./_handleDBError');
+import ridersRepo from '../repository/rider';
+import teamRepo from '../repository/team';
+import validation from '../schema/riderSchema';
+import Knex from 'knex'
+import handleDBError from './_handleDBError';
 
 //GET
-const getById = async (id) => {
-  const rider = await ridersRepo.findById(id);
+const getById = async (knex: Knex, id:number) => {
+  const rider = await ridersRepo.findById(knex, id);
   if (!rider)
   {
     throw Error(`There is no rider with id ${id}`, {id});
@@ -23,7 +23,7 @@ const getAllRidersInfo = async () => {
   const riders = await ridersRepo.findAllRidersInfo();
   return { items: riders, count:riders.length };
 };
-const getRiderByFullName = async (first_name, last_name) =>
+const getRiderByFullName = async (first_name: string, last_name: string) =>
 {
   const rider = await ridersRepo.findByName(first_name,last_name);
   if (!rider)
@@ -33,7 +33,7 @@ const getRiderByFullName = async (first_name, last_name) =>
   return rider;
 };
 
-const getRidersFromTeam = async(teamId) => {
+const getRidersFromTeam = async(teamId: number) => {
   const riders = await ridersRepo.findAllFromTeam(teamId);
   if (!riders)
   {
@@ -51,7 +51,7 @@ const getAllWithTeam = async () => {
 
 //UPDATE
 let newRider = [];
-const updateById = async (id, {nationality, last_name, first_name, birthday, points, teamId, monthly_wage}) =>
+const updateById = async (id: number, {nationality, last_name, first_name, birthday, points, teamId, monthly_wage}) =>
 {
   const valid = validation.riderSchema.validate({id, nationality, last_name, first_name, teamId, birthday, points, monthly_wage});
   if (valid.error)
@@ -122,7 +122,7 @@ const create= async ({id, nationality, last_name, first_name, birthday, points, 
 };
 
 //DELETE
-const deleteById = async (id) => {
+const deleteById = async (id: number) => {
   const rider = getById(id);
 
   if (!rider) {
@@ -132,4 +132,4 @@ const deleteById = async (id) => {
   return rider;
 };
 
-module.exports={getAll, getAllWithTeam, getRiderByFullName, getRidersFromTeam, getAllRidersInfo, create, getById, updateById, deleteById};
+export default {getAll, getAllWithTeam, getRiderByFullName, getRidersFromTeam, getAllRidersInfo, create, getById, updateById, deleteById};
