@@ -1,6 +1,5 @@
 import {Knex} from 'knex';
-import tables from '..';
-
+import {tables} from '../index';
 import {Sponsor} from '../../types/types'
 
 export async function seed(knex: Knex): Promise<void>{

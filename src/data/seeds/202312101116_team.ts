@@ -1,6 +1,6 @@
 import {Knex} from 'knex';
-import tables from '..';
-import Role from '../../core/roles'
+import {tables} from '../index';
+import {Role} from '../../core/roles'
 import {Team} from '../../types/types'
 
 export async function seed(knex: Knex): Promise<void>{

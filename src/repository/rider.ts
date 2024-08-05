@@ -13,8 +13,8 @@ const SELECT_COLUMNS_RACE: (keyof Race)[] = [
   'raceId', 'name', 'date', 'location'
 ];
 
-const SELECT_COLUMNS_RACE_TEAMS: (keyof Team)[] = [
-  `${tables.race_teams}.raceId`, `${tables.race_teams}.teamId`, `${tables.team}.name as team_name`
+const SELECT_COLUMNS_RACE_TEAM: (keyof Team)[] = [
+  `${tables.race_team}.raceId`, `${tables.race_team}.teamId`, `${tables.team}.name as team_name`
 ];
 
 type RiderTeamCombined = Rider & {

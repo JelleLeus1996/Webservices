@@ -1,7 +1,7 @@
 import {Knex} from 'knex';
 import {tables} from '../data';
 import {getLogger} from '../core/logging';
-import {Race, TeamWithSponsorsAndRaces, Team, Rider, Sponsor, TeamWithRiders} from '../types/types'
+import {Race, TeamWithSponsorsAndRaces, Team, Rider, Sponsor, TeamWithRiders, TeamBaseFinancials} from '../types/types'
 
 const SELECT_COLUMNS_TEAMS = [
   `${tables.team}.teamId AS teamId`, 'name', 'country', 'victories', `${tables.team}.points AS teamPoints`,'team_status',
@@ -37,8 +37,8 @@ export const findAllTeamData = async(knex: Knex): Promise<Team[]> => {
     // Get races for the team
     const races: Race[] = await knex(tables.race)
       .select('raceId', 'name', 'date', 'location')
-      .join(tables.race_teams, `${tables.race}.raceId`, `${tables.race_teams}.raceId`)
-      .where(`${tables.race_teams}.teamId`, team.teamId);
+      .join(tables.race_team, `${tables.race}.raceId`, `${tables.race_team}.raceId`)
+      .where(`${tables.race_team}.teamId`, team.teamId);
 
     return {
       ...team,
@@ -51,7 +51,7 @@ export const findAllTeamData = async(knex: Knex): Promise<Team[]> => {
 };
 
 //get all team data of all teams
-export const findTeamsWithRiders = async (knex: Knex, teamId: number): Promise<Team | null> => {
+export const findTeamsWithRiders = async (knex: Knex, teamId: number): Promise<TeamBaseFinancials | null> => {
   // Get team data for the specified teamId
   const team: Team | undefined = await knex(tables.team)
     .where(`${tables.team}.teamId`, teamId)
@@ -72,32 +72,34 @@ export const findTeamsWithRiders = async (knex: Knex, teamId: number): Promise<T
     .sum(knex.raw('monthly_wage * 12 as rider_cost'));
 
   // Transform the team data to include riders, budget, and rider cost
-  const transformedTeam : Team = transformTeam(team);
+  const transformedTeam : TeamBaseFinancials = transformTeam(team);
   transformedTeam.budget = sponsors[0]?.budget || 0;
   transformedTeam.rider_cost = riders[0]?.rider_cost || 0;
 
   return transformedTeam;
 };
 
-const findAllTeamsInfo = async() => {
-  return await getKnex()(tables.team)
+const findAllTeamsInfo = async(knex: Knex) => {
+  return await knex(tables.team)
     .select()
     .orderBy('name','ASC');
 };
  
 //OO mapping
 export const transformTeam = ({
+  teamId,
   rider_id, 
   nationality, 
   last_name, 
   first_name, 
   birthday, 
   rider_points, 
-  monthly_wage, 
+  monthly_wage,
   ...rest
 }: any): TeamWithRiders =>{
   // Create a Rider object
   const rider: Rider = {
+    teamId,
     id: rider_id,
     nationality,
     last_name,
@@ -113,22 +115,22 @@ export const transformTeam = ({
   };
 };
 
-const findById=async(id) => {
-  const riders = await getKnex()(tables.team)
+const findById=async(knex: Knex, id: number) => {
+  const riders = await knex(tables.team)
     .where(`${tables.team}.teamId`, id)
     .first(SELECT_COLUMNS_TEAMS);
   return riders;
 };
-const findByName=async(name) => {
-  const riders = await getKnex()(tables.team)
+const findByName=async(knex: Knex, name: string) => {
+  const riders = await knex(tables.team)
     .where(`${tables.team}.name`, name)
     .first(SELECT_COLUMNS_TEAMS);
   return riders;
 };
 
 
-const findCount = async () =>{
-  const [count] = await getKnex()(tables.team).count();
+const findCount = async (knex: Knex) =>{
+  const [count] = await knex(tables.team).count();
   return count['count(*)'];
 };
  
@@ -153,10 +155,10 @@ export const create = async (knex: Knex, teamData: Omit<Team, 'teamId'>): Promis
   });
 };
   
-const updateById = async (teamId, {name, country, victories, points , team_status,
+const updateById = async (knex: Knex, teamId: number, {name, country, victories, points , team_status,
   abbreviation, director, assistant, representative, bike, budget, overhead_cost, rider_cost,email})=>{
   try {
-    await knex()(tables.team)
+    await knex(tables.team)
       .update({name, country, victories, points , team_status,
         abbreviation, director, assistant, representative, bike, budget, overhead_cost, rider_cost,email
       })
@@ -168,10 +170,10 @@ const updateById = async (teamId, {name, country, victories, points , team_statu
   }
 };
  
-const deleteById = async (id) =>
+const deleteById = async (knex: Knex, id: number) =>
 {
   try {
-    const rowsAffected = await getKnex()(tables.team)
+    const rowsAffected = await knex(tables.team)
       .where(`${tables.team}.teamId`,id)
       .delete();
  
@@ -181,12 +183,12 @@ const deleteById = async (id) =>
     throw error;
   }
 };
-const findByEmail = (email) => {
-  return getKnex()(tables.team).where('email', email).first();
+const findByEmail = (knex: Knex, email: string) => {
+  return knex(tables.team).where('email', email).first();
 };
 
-const findAllTeamsWithFinancials = async () => {
-  const teamsWithBudget = await getKnex()(tables.team)
+const findAllTeamsWithFinancials = async (knex: Knex) => {
+  const teamsWithBudget = await knex(tables.team)
     .select(
       `${tables.team}.teamId`,
       'name',
@@ -207,7 +209,7 @@ const findAllTeamsWithFinancials = async () => {
   const teamsWithRidercost = await Promise.all(teamsWithBudget.map(async(team)=>{
     const totalRiderCost = await knex(tables.rider)
       .where(`${tables.rider}.teamId`,team.teamId)
-      .sum( {rider_cost : getKnex().raw('monthly_wage'*12) });
+      .sum( {rider_cost : knex.raw('?? * 12', ['monthly_wage']) });
     return {
       ...team,
       rider_cost : totalRiderCost[0].rider_cost || 0

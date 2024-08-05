@@ -1,6 +1,5 @@
 import {Knex} from 'knex';
-import tables from '..';
-
+import {tables} from '../index';
 
 // Functie om 4 willekeurige continentale teams te kiezen
 function getRandomContinentalTeamIds(excludeIds: number[], numberOfTeams: number){
@@ -17,17 +16,17 @@ function getRandomContinentalTeamIds(excludeIds: number[], numberOfTeams: number
   
   export async function seed(knex: Knex): Promise<void>{
     // First delete all entries
-    await knex(tables.race_teams).del();
+    await knex(tables.race_team).del();
 
-    // Generate race_teams data
-    const raceTeamsData = [];
+    // Generate race_team data
+    const raceTeamData = [];
     for (let raceId = 1; raceId <= 30; raceId++) {
       const worldTourTeamIds = Array.from({ length: 16 }, (_, i) => i + 1);
       const continentalTeamIds = getRandomContinentalTeamIds([23], 4);
       const teamIds = worldTourTeamIds.concat(continentalTeamIds);
 
       teamIds.forEach(teamId => {
-        raceTeamsData.push({
+        raceTeamData.push({
           raceId: raceId,
           teamId: teamId
         });
@@ -35,5 +34,5 @@ function getRandomContinentalTeamIds(excludeIds: number[], numberOfTeams: number
     }
 
     // Add data
-    await knex(tables.race_teams).insert(raceTeamsData);
+    await knex(tables.race_team).insert(raceTeamData);
   };

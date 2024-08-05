@@ -1,23 +1,23 @@
-const {join} = require('path');
+import {join} from 'path';
 
-const knex = require('knex'); // 👈 import knex
-const config = require('config');//read from config file
+import knex from 'knex'; // 👈 import knex
+import config from 'config';//read from config file
 
-const { getLogger } = require('../core/logging'); // 👈 import logging
+import { getLogger } from '../core/logging'; // 👈 import logging
 // 👇 1 - start config
 
-const NODE_ENV = config.get('env');
-const isDevelopment = NODE_ENV === 'development';
+const NODE_ENV: string = config.get('env');
+const isDevelopment: boolean = NODE_ENV === 'development';
 
-const DATABASE_CLIENT = config.get('database.client');
-const DATABASE_NAME = config.get('database.name');
-const DATABASE_HOST = config.get('database.host');
-const DATABASE_PORT = config.get('database.port');
-const DATABASE_USERNAME = config.get('database.username');
-const DATABASE_PASSWORD = config.get('database.password');
+const DATABASE_CLIENT: string = config.get('database.client');
+const DATABASE_NAME: string = config.get('database.name');
+const DATABASE_HOST: string = config.get('database.host');
+const DATABASE_PORT: number = config.get('database.port');
+const DATABASE_USERNAME: string = config.get('database.username');
+const DATABASE_PASSWORD: string = config.get('database.password');
 
 let knexInstance;
-const initializeData = async() => {
+const initializeData = async(): Promise<any> => {
   const logger = getLogger(); // 👈 9 Create logger
   logger.info('Initializing connection to the database'); // 👈 9
 
@@ -27,7 +27,7 @@ const initializeData = async() => {
     connection: {
       host: DATABASE_HOST,
       port: DATABASE_PORT,
-      //database: DATABASE_NAME,
+      database: DATABASE_NAME,
       user: DATABASE_USERNAME,
       password: DATABASE_PASSWORD,
       insecureAuth: isDevelopment,
@@ -73,7 +73,7 @@ const initializeData = async() => {
   return knexInstance;
 };
 
-async function shutdownData(){
+async function shutdownData(): Promise<void>{
   getLogger().info('shutting down database connection');
   await knexInstance.destroy();
   knexInstance = null;
@@ -92,8 +92,9 @@ const tables =Object.freeze({
   team:'teams',
   rider:'riders',
   sponsor:'sponsors',
-  race:'races'
+  race:'races',
+  race_team:'race_Teams'
 });
 
 //export initialize data
-module.exports={initializeData, getKnex, tables, shutdownData};
+export {initializeData, getKnex, tables, shutdownData};

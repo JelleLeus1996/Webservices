@@ -1,5 +1,5 @@
 import {Knex} from 'knex';
-import tables from '..';
+import {tables} from '../index';
 import {Race} from '../../types/types'
 
 

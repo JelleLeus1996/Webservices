@@ -1,7 +1,7 @@
 import { tables} from '../data/index';
 import {getLogger}  from '../core/logging';
 import { Knex } from 'knex';
-import {Race, Team} from '../types/types'
+import {Race, Team, BasicTeamInfo, RaceWithTeams} from '../types/types'
 
 
 // Define columns for race
@@ -9,13 +9,13 @@ const SELECT_COLUMNS_RACE: (keyof Race)[] = [
   'raceId', 'name', 'date', 'location'
 ];
 
-// Define columns for race_teams
-const SELECT_COLUMNS_RACE_TEAMS: (keyof Team)[]= [
+// Define columns for race_team
+const SELECT_COLUMNS_RACE_TEAM: (keyof Team)[]= [
   'teamId','name'
 ];
 
 //Format race with teams
-const formatRaceWithTeams = (race: Race, teams: Team[]): Race & {teams:Team[]} => {
+const formatRaceWithTeams = (race: Race, teams: BasicTeamInfo[]): RaceWithTeams => {
   return {
     ...race,
     teams: teams.map(team => ({
@@ -44,7 +44,7 @@ export const findRaceById = async(knex:Knex, raceId:number):Promise<Race|null> =
 
 
 //GET race by ID with associated teams
-export const findRaceByIdWithTeams = async(knex:Knex, raceId:number):Promise<(Race & {teams:Team[]}) | null> => {
+export const findRaceByIdWithTeams = async(knex:Knex, raceId:number):Promise<(Race & {teams:BasicTeamInfo[]}) | null> => {
   const race = await knex(tables.race)
     .where('raceId',raceId)
     .first(SELECT_COLUMNS_RACE);
@@ -53,10 +53,10 @@ export const findRaceByIdWithTeams = async(knex:Knex, raceId:number):Promise<(Ra
   {
     return null;
   }
-  const teams = await knex(tables.race_teams)
-    .join(tables.team, `${tables.race_teams}.teamId`, '=', `${tables.team}.teamId`)
-    .where(`${tables.race_teams}.raceId`,raceId)
-    .select(SELECT_COLUMNS_RACE_TEAMS);
+  const teams = await knex(tables.race_team)
+    .join(tables.team, `${tables.race_team}.teamId`, '=', `${tables.team}.teamId`)
+    .where(`${tables.race_team}.raceId`,raceId)
+    .select(SELECT_COLUMNS_RACE_TEAM);
 
   return formatRaceWithTeams(race, teams);
 };
@@ -98,12 +98,12 @@ export const deleteRaceById = async (knex:Knex, raceId: number):Promise<boolean>
 
 // Add one team to a race
 export const addTeamToRace = async (knex: Knex, raceId: number, teamId:number):Promise<void> => {
-  const exists = await knex(tables.race_teams)
+  const exists = await knex(tables.race_team)
     .where({ raceId, teamId })
     .first();
 
   if (!exists) {
-    await knex(tables.race_teams)
+    await knex(tables.race_team)
       .insert({ raceId, teamId });
   }
 };
@@ -116,14 +116,14 @@ export const addTeamsToRace = async (knex: Knex, raceId: number, teamIds: number
   
 // Remove one team from a race
 export const removeTeamFromRace = async (knex: Knex, raceId:number, teamId:number):Promise<void> => {
-  await knex(tables.race_teams)
+  await knex(tables.race_team)
     .where({ raceId, teamId })
     .delete();
 };
   
 // Remove all teams from a race
 export const removeAllTeamsFromRace = async (knex: Knex, raceId:number):Promise<void> => {
-  await knex(tables.race_teams)
+  await knex(tables.race_team)
     .where({ raceId })
     .delete();
 };

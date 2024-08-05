@@ -14,6 +14,11 @@ export interface TeamBase {
     overhead_cost?: number;
   }
 
+export interface TeamBaseFinancials extends TeamBase{
+  budget: number,
+  rider_cost: number,
+}
+
 export interface Team {
     teamId: number;
     name: string;
@@ -28,7 +33,6 @@ export interface Team {
     bike: string;
     overhead_cost: number;
     email: string;
-    password:string;
     password_hash: string;
     roles: string;
   }
@@ -69,4 +73,13 @@ export interface Team {
 
   export interface RiderWithTeam extends Rider {
     team: TeamBase;
+  }
+
+  export interface BasicTeamInfo {
+    teamId: number;
+    name: string;
+  }
+  
+  export interface RaceWithTeams extends Race {
+    teams: BasicTeamInfo[];
   }
