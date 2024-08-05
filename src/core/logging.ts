@@ -1,10 +1,15 @@
 
-const winston = require('winston');
+import winston from 'winston';
 const { combine, timestamp, colorize, printf } = winston.format;
 
+interface Logger {
+  error: (message: string, meta?: any) => void;
+  warn: (message: string, meta?: any) => void;
+  info: (message: string, meta?: any) => void;
+  debug: (message: string, meta?: any) => void;
+}
 
-
-let rootLogger;
+let rootLogger: Logger | null = null;
 
 /**
  * Get the root logger.
@@ -27,14 +32,18 @@ const loggerFormat = () => {
     timestamp,
     name = 'server',
     ...rest
-  }) =>
+  }: winston.Logform.TransformableInfo) =>
     `${timestamp} | ${name} | ${level} | ${message} | ${JSON.stringify(rest)}`;
 
-  const formatError = ({ error: { stack }, ...rest }) =>
-    `${formatMessage(rest)}\n\n${stack}\n`;
-  const format = (info) =>
-    info.error instanceof Error ? formatError(info) : formatMessage(info);
-  return combine(colorize(), timestamp(), printf(format)); //dependent of the message info/error a different color, it will appear in a different color
+  const formatError = (info: winston.Logform.TransformableInfo) => {
+    const { error, ...rest } = info;
+    return `${formatMessage(rest)}\n\n${error instanceof Error ? error.stack : 'Error'}\n`;
+  };
+
+  const format = (info: winston.Logform.TransformableInfo) =>
+    info instanceof Error ? formatError(info) : formatMessage(info);
+
+  return combine(colorize(), timestamp(), printf(format));
 };
 
 /**
@@ -49,7 +58,11 @@ const initializeLogger = ({
   level,
   disabled = false,
   defaultMeta = {}
-}) => {
+}:{
+  level: string;
+  disabled?: boolean;
+  defaultMeta?: object;
+}): Logger => {
   rootLogger = winston.createLogger({
     level,
     format: loggerFormat(),
@@ -59,12 +72,12 @@ const initializeLogger = ({
         silent: disabled,
       }),
     ],
-  });
+  }) as Logger;
 
   return rootLogger;
 };
 
-module.exports = {
+export {
   initializeLogger,
   getLogger,
 };

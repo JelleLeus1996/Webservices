@@ -1,6 +1,7 @@
-const Joi = require('joi'); 
+import Joi from 'joi'; 
+import { Context, Next } from 'koa';
 
-const JOI_OPTIONS = {
+const JOI_OPTIONS: Joi.ValidationOptions = {
   abortEarly: true,
   allowUnknown: false,
   context: true,
@@ -8,10 +9,24 @@ const JOI_OPTIONS = {
   presence: 'required',
 };
 
-const cleanupJoiError = (
-  error
-) =>
-  error.details.reduce((resultObj, { message, path, type }) => {
+interface JoiErrorDetail {
+  message: string;
+  path: (string | number)[];
+  type: string;
+}
+
+interface JoiError {
+  details: JoiErrorDetail[];
+}
+
+interface ValidationSchema {
+  query?: Joi.ObjectSchema;
+  body?: Joi.ObjectSchema;
+  params?: Joi.ObjectSchema;
+}
+
+const cleanupJoiError = (error: JoiError) =>
+  error.details.reduce((resultObj: Record<string, {type:string,message: string}[]>, { message, path, type }) => {
     const joinedPath = path.join('.') || 'value';
     if (!resultObj[joinedPath]) {
       resultObj[joinedPath] = [];
@@ -26,17 +41,17 @@ const cleanupJoiError = (
 
 
 
-const validate = (schema) => {
+const validate = (schema:ValidationSchema) => {
   if (!schema) {
     schema = {
-      query: {},
-      body: {},
-      params: {},
+      query: Joi.object({}),
+      body: Joi.object({}),
+      params: Joi.object({}),
     };
   }
 
-  return (ctx, next) => {
-    const errors = {};
+  return (ctx: Context, next: Next) => {
+    const errors: Record<string, any> = {};
 
     if (!Joi.isSchema(schema.params)) {
       schema.params = Joi.object(schema.params || {});
@@ -93,4 +108,4 @@ const validate = (schema) => {
     return next();
   };
 };
-module.exports = validate;
+export default validate;

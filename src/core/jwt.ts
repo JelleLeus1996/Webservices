@@ -1,20 +1,37 @@
-const config = require('config'); 
-const jwt = require('jsonwebtoken'); 
+import config from 'config'; 
+import jwt from 'jsonwebtoken'; 
+import {Team} from '../types/types';
 
-const JWT_AUDIENCE = config.get('auth.jwt.audience'); 
-const JWT_SECRET = config.get('auth.jwt.secret');
-const JWT_ISSUER = config.get('auth.jwt.issuer'); 
-const JWT_EXPIRATION_INTERVAL = config.get('auth.jwt.expirationInterval'); 
+const JWT_AUDIENCE: string = config.get('auth.jwt.audience'); 
+const JWT_SECRET: string = config.get('auth.jwt.secret');
+const JWT_ISSUER: string = config.get('auth.jwt.issuer'); 
+const JWT_EXPIRATION_INTERVAL: number = config.get('auth.jwt.expirationInterval'); 
 
-const generateJWT = (team) => {
+interface TokenData {
+  teamId: number;
+  roles: string;
+}
+
+interface SignOptions {
+  expiresIn: number;
+  audience: string;
+  issuer: string;
+  subject: string;
+}
+interface VerifyOptions {
+  audience: string;
+  issuer: string;
+  subject: string;
+}
+export const generateJWT = (team: Team): Promise<string> => {
   //eigen claims
-  const tokenData= {
+  const tokenData: TokenData = {
     teamId:team.teamId,
     roles:team.roles
   };
 
   //predifined claims
-  const signOptions = {
+  const signOptions:SignOptions = {
     expiresIn:Math.floor(JWT_EXPIRATION_INTERVAL/1000),
     audience:JWT_AUDIENCE,
     issuer:JWT_ISSUER,
@@ -32,7 +49,7 @@ const generateJWT = (team) => {
   );
 };
 
-const verifyJWT = (authToken) => {
+export const verifyJWT = (authToken: string):Promise <TokenData> => {
   const verifyOptions = {
     audience:JWT_AUDIENCE,
     issuer:JWT_ISSUER,
@@ -49,4 +66,3 @@ const verifyJWT = (authToken) => {
     });
   });
 };
-module.exports={generateJWT, verifyJWT};
