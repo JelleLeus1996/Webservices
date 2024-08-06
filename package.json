@@ -31,6 +31,7 @@
   },
   "devDependencies": {
     "@types/config": "^3.3.4",
+    "@types/jest": "^29.5.12",
     "@types/knex": "^0.16.1",
     "env-cmd": "^10.1.0",
     "eslint": "^8.56.0",

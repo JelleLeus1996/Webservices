@@ -3,7 +3,7 @@ import { getLogger }  from '../core/logging';
 import { Knex } from 'knex';
 import {Rider, Race, Team, RiderWithTeam, TeamBase} from '../types/types'
 
-const SELECT_COLUMNS: (keyof Rider & keyof Team)[] = [
+const SELECT_COLUMNS = [
   'id','nationality','last_name','first_name','birthday',`${tables.rider}.points AS rider_points`,'teamId',`${tables.team}.name AS team_name`,
   `${tables.team}.country AS team_country`,`${tables.team}.team_status AS team_status`,`${tables.team}.director AS director`,`${tables.team}.assistant AS assistant`,
   `${tables.team}.representative AS representative`,`${tables.team}.bike as bike`

@@ -1,11 +1,12 @@
-const config = require('config'); // 👈 2
+import config from 'config'; // 👈 2
 
-const { initializeLogger } = require('../src/core/logging'); // 👈 2
-const Role = require('../src/core/roles'); // 👈 4
-const { initializeData, getKnex, tables } = require('../src/data'); // 👈 3 en 4
+import { initializeLogger } from '../src/core/logging'; // 👈 2
+import {Role} from '../src/core/roles'; // 👈 4
+import { initializeData, getKnex, tables } from '../src/data'; // 👈 3 en 4
+import {Team} from '../src/types/types'
  
 // 👇 1
-module.exports = async () => {
+export default async (): Promise<void> => {
   // Create a database connection
   // 👇 2<
   initializeLogger({
@@ -52,5 +53,5 @@ module.exports = async () => {
       password_hash: '$argon2id$v=19$m=131072,t=6,p=1$9AMcua9h7va8aUQSEgH/TA$TUFuJ6VPngyGThMBVo3ONOZ5xYfee9J1eNMcA5bSpq4',
       roles: JSON.stringify([Role.TEAMREPRESENTATIVE,Role.ADMIN])
     },
-  ]);
+  ] as Team[],);
 };

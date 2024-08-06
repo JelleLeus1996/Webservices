@@ -1,5 +1,6 @@
 // 👇 1
-const testAuthHeader = (requestFactory) => {
+
+const testAuthHeader = (requestFactory: any) => {
   // 👇 2
   test('it should 401 when no authorization token provided', async () => {
     const response = await requestFactory();
@@ -22,6 +23,4 @@ const testAuthHeader = (requestFactory) => {
   });
 };
 
-module.exports = {
-  testAuthHeader,
-};
+export  {testAuthHeader};
