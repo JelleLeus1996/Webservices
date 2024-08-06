@@ -2,21 +2,15 @@ import supertest from 'supertest';
 import createServer from '../../src/createServer';
 import { tables, getKnex } from '../../src/data';
 import {Role} from '../../src/core/roles';
-import {Rider, Team} from '../../src/types/types'
 import { withServer, login, loginAdmin } from '../supertest.setup'; 
-import {Knex} from 'knex';
+import {Race, Team} from '../../src/types/types'
 
 const data =  {
-  riders: [{
-    id:1, nationality:'Poland', last_name:'Niewiadoma', first_name:'Katarzyna', birthday:new Date('1994-09-29'), points:10763, teamId:1, monthly_wage:50047.57 
-  },
-  { 
-    id:2, nationality:'Australia', last_name:'Cromwell', first_name:'Tiffany', birthday:new Date('1988-07-06'), points:3604, teamId:1, monthly_wage:7192.01 
-  },
-  { 
-    id:3, nationality:'Italy', last_name:'Paladin', first_name:'Soraya', birthday:new Date('1994-04-11'), points:3372, teamId:1, monthly_wage:6517.66 
-  },
-  ] as Rider[],
+  races: [      
+    { raceId: 1, name: 'Omloop het Nieuwsblad', date: new Date('2024-02-25'), location: 'Belgium' },
+    { raceId: 2, name: 'Tour de France', date: new Date('2024-07-01'), location: 'France' },
+    { raceId: 3, name: "Giro d'Italia", date: new Date('2024-05-06'), location: 'Italy' },
+  ] as Race[],
   teams: [{
     teamId:1,
     name:'CyclingTeam 1', 
@@ -30,7 +24,7 @@ const data =  {
     representative:'Magnus Bäckstedt', 
     bike:'Canyon', 
     overhead_cost:6500000.00, 
-    email: 'Magnus.Bäckstedt@hotmail.com', 
+    email: 'Magnus.Bäcksted@hotmail.com', 
     password_hash: '$argon2id$v=19$m=131072,t=6,p=1$9AMcua9h7va8aUQSEgH/TA$TUFuJ6VPngyGThMBVo3ONOZ5xYfee9J1eNMcA5bSpq4', 
     roles: JSON.stringify([Role.TEAMREPRESENTATIVE])},
   { 
@@ -53,68 +47,57 @@ const data =  {
 };
 
 const dataToDelete = {
-  riders: [1, 2, 3],
+  races: [1, 2, 3],
   teams: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27]
 };
 describe('Teams', ()=>{
-  let server: ReturnType<any>;
-  let request: supertest.SuperTest<supertest.Test>;
-  let knex: Knex;
-  let authHeader: string;
-  let authHeaderAdmin: string;
+  let server;
+  let request;
+  let knex;
+  let authHeader;
+  let authHeaderAdmin;
   //before all tests
   /*  withServer(({supertest,knex:k})=>
   {
     request=supertest;
     knex=k;
   }); */
-  beforeAll(async () => {
-    const app = await createServer();
-    server = app.start();
-    request = supertest(server);
+  beforeAll(async ()=>{
+    server = await createServer();
+    request = supertest(server.getApp().callback());
     knex = getKnex();
     authHeader = await login(request);
     authHeaderAdmin = await loginAdmin(request);
   });
-
   afterAll(async () => {
-    server.close();
+    await server.stop();
   });
  
-  const url = '/api/riders';
-  describe('GET /api/riders',()=>{
+  const url = '/api/races';
+  describe('GET /api/races',()=>{
 
     beforeAll(async()=>{
       await knex(tables.team).whereIn('teamId', dataToDelete.teams).delete();
-      await knex(tables.rider).whereIn('id', dataToDelete.riders).delete();
+      await knex(tables.race).whereIn('id', dataToDelete.races).delete();
       //testdata toevoegen aan de db
       await knex(tables.team).insert(data.teams);
-      await knex(tables.rider).insert(data.riders);
+      await knex(tables.race).insert(data.races);
     });
  
     afterAll(async()=>{
       await knex(tables.team).whereIn('teamId', dataToDelete.teams).delete();
-      await knex(tables.rider).whereIn('id', dataToDelete.riders).delete();
+      await knex(tables.race).whereIn('id', dataToDelete.races).delete();
     });
 
-    it('should return 200 and all riders', async()=>{
-      const response = await request.get(url).set('Authorization',authHeaderAdmin).set('Accept', 'application/json');
+    it('should return 200 and all races', async()=>{
+      const response = await request.get(url).set('Authorization',authHeader).set('Accept', 'application/json');
       expect(response.status).toBe(200);
-      expect(response.body.items.length).toBe(3); //2 riders (Or body.count)
+      expect(response.body.items.length).toBe(2); //2 teams (Or body.count)
       expect(response.body.items[0]).toEqual({
-        id:1, 
-        nationality:'Poland', 
-        last_name:'Niewiadoma', 
-        first_name:'Katarzyna', 
-        birthday:'1994-09-29', 
-        points:10763, 
-        teamId:1,
+       raceId: 1, name: 'Omloop het Nieuwsblad', date: new Date('2024-02-25'), location: 'Belgium'
       });
       expect(response.body.items[1]).toEqual({
-        id:2, nationality:'Australia', last_name:'Cromwell', first_name:'Tiffany', birthday:'1988-07-06', points:3604, teamId:1
-      });
-      expect(response.body.items[2]).toEqual({
-        id:3, nationality:'Italy', last_name:'Paladin', first_name:'Soraya', birthday:'1994-04-11', points:3372, teamId:1
+       raceId: 2, name: 'Tour de France', date: new Date('2024-07-01'), location: 'France'
       });
     });
     it('should 400 when given an argument', async () => {
@@ -125,120 +108,110 @@ describe('Teams', ()=>{
     });
   });
 
-  describe('GET /api/riders/:id',()=>{
+  describe('GET /api/races/:id',()=>{
     beforeAll(async()=>{
       //testdata toevoegen aan de db
-      await knex(tables.team).insert(data.teams);
-      await knex(tables.rider).insert(data.riders[0]);
+      await knex(tables.team).insert(data.teams[0]);
+      await knex(tables.race).insert(data.races);
     });
  
     afterAll(async()=>{
       await knex(tables.team).whereIn('teamId', dataToDelete.teams).delete();
-      await knex(tables.rider).whereIn('id', dataToDelete.riders).delete();
+      await knex(tables.race).whereIn('id', dataToDelete.races).delete();
     });
-    it('should return 200 and 1 rider', async()=>{
+    it('should return 200 and all races', async()=>{
       const response = await request.get(`${url}/1`).set('Authorization',authHeader).set('Accept', 'application/json');
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
-        id:1, nationality:'Poland', last_name:'Niewiadoma', first_name:'Katarzyna', birthday:'1994-09-29', points:10763, teamId:1, monthly_wage:50047.57 
+        raceId: 1, name: 'Omloop het Nieuwsblad', date: new Date('2024-02-25'), location: 'Belgium'
       });
     });
   });
-  it ('should 404 when requesting not existing rider', async ()=> {
-    const response = await request.get(`${url}/8`).set('Authorization',authHeaderAdmin).set('Accept', 'application/json');
+  it ('should 404 when requesting not existing race', async ()=> {
+    const response = await request.get(`${url}/4`).set('Authorization',authHeaderAdmin).set('Accept', 'application/json');
  
     expect(response.statusCode).toBe(404);
     expect(response.body).toMatchObject({
-      message:'No rider with id 8 exists',
+      message:'No race with id 4 exists',
       details: {
-        id: 8,
+        id: 4,
       },
            
     });
     expect (response.body.stack).toBeTruthy();
   });
  
-  it ('should 400 with invalid rider id', async ()=> {
+  it ('should 400 with invalid race id', async ()=> {
     const response = await request.get(`${url}/invalid`).set('Authorization',authHeaderAdmin).set('Accept', 'application/json');
  
     expect(response.statusCode).toBe(400);
     expect(response.body.id).toBe(undefined);
     expect(response.body.details.params).toMatchObject(
       {
-        'teamId': [{'message': '"id" must be a number', 'type': 'number.base'}]
+        'teamId': [{'message': '"raceId" must be a number', 'type': 'number.base'}]
       });
  
   });
   
-  describe('POST /api/riders', () => {
-    const ridersToDelete = [];
+  describe('POST /api/races', () => {
+    const racesToDelete = [];
          
-    //create some rider data; no riders before, we will create it ourself
+    //create some race data; no teams before, we will create it ourself
     beforeAll(async () => {
 
     });
     afterAll(async () => {
       await knex(tables.team).whereIn('teamId', dataToDelete.teams).delete();
-      await knex(tables.rider).whereIn('id', dataToDelete.riders).delete();
+      await knex(tables.race).whereIn('id', dataToDelete.races).delete();
     });
   
-    it('should 201 and return the created rider', async () => {
+    it('should 201 and return the created race', async () => {
       const response = await request.post(url).set('Authorization',authHeaderAdmin).set('Accept', 'application/json')
         .send({
-          'id':350, 
-          'nationality':'Belgium', 
-          'last_name':'Poppe', 
-          'first_name':'Febe', 
-          'birthday':'2000-07-14', 
-          'points':0, 
-          'teamId':1, 
-          'monthly_wage':500.00 
+            'raceId': 4, 'name': 'Dwars door Vlaanderen', 'date': new Date('2024-05-06'), 'location': 'België',
+             'email': 'maarten.verbeek@hogent.be',
+          'password': '12345678',
+          'roles': 'ADMIN'
         });
       expect(response.status).toBe(201);
-      expect(response.body.id).toBeTruthy();
-      expect(response.body.nationality).toBe('Belgium');
-      expect(response.body.last_name).toBe('Poppe');
-      expect(response.body.first_name).toBe('Febe');
-      expect(response.body.points).toBe(0);
-      expect(response.body.birthday).toBe('2000-07-14');
-      expect(response.body.teamId).toBe('1');
-      expect(response.body.monthly_wage).toBe(500.00);
-      expect(response.body.rider_cost).toBe(1177803.13);
+      expect(response.body.raceId).toBeTruthy();
+      expect(response.body.country).toBe('Dwars door Vlaanderen');
+      expect(response.body.date).toBe(new Date('2024-05-06'));
+      expect(response.body.location).toBe('België');
+      expect(response.body.mail).toBe('maarten.verbeek@hogent.be');
+      expect(response.body.password).toBe('12345678');
+      expect(response.body.roles).toBe('ADMIN');
       
-      ridersToDelete.push(response.body.id);
+      racesToDelete.push(response.body.id);
     });
   });
-  it ('should 400 when nationality is not filled', async ()=> {
+  it ('should 400 when name is not filled', async ()=> {
     const response = await request.post(url).set('Authorization',authHeaderAdmin).set('Accept', 'application/json')
       .send({
-        'id':350, 
-        'last_name':'Poppe', 
-        'first_name':'Febe', 
-        'birthday':'2000-07-14', 
-        'points':0, 
-        'teamId':1, 
-        'monthly_wage':500.00 
+        'id':5,
+        'date': new Date('2024-05-06'), 
+        'location': 'België',
       });
     expect(response.statusCode).toBe(404);
     expect(response.body).toMatchObject({
       id:'NOT_FOUND',
-      message:'No nationality is given',
+      message:'No name is given',
       details: {
-        id: 350,
+        id: 5,
       },
              
     });
     expect (response.body.stack).toBeTruthy();
   });
-  describe ('DELETE /api/riders/:id',() =>{
-    //Create riders & teams
+  describe ('DELETE /api/races/:id',() =>{
+    //Create races & teams
     beforeAll(async()=>{
       await knex(tables.team).insert(data.teams);
     });
          
     afterAll(async () => {
       await knex(tables.team).whereIn('teamId', dataToDelete.teams).delete();
-      await knex(tables.rider).whereIn('id', dataToDelete.riders).delete();
+      await knex(tables.race).whereIn('raceId', dataToDelete.races).delete();
     });
          
     it('should 204 and return nothing', async ()=>{
@@ -254,11 +227,11 @@ describe('Teams', ()=>{
     
       expect(response.statusCode).toBe(404);
       expect(response.body).toMatchObject({
-        message:'No rider with id 37 exists',
+        message:'No race with id 37 exists',
         details: {
           id: 37,
         },
       });
     });
-  }); 
+  });
 });

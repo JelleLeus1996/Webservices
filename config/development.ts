@@ -1,4 +1,4 @@
-module.exports={
+export default {
   port: 9000,
   logging : {
     level:'silly', //logging until lowest level (6 - silly)

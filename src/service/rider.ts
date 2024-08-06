@@ -71,9 +71,9 @@ const updateById = async (knex: Knex, id: number, {nationality, last_name, first
   //create rider
   if (typeof last_name === 'string')
   {
-    newRider = {
+    newRider = [{
       nationality, last_name, first_name, birthday, points, teamId, monthly_wage
-    };
+    }];
   
   }
   const updatedRider = {

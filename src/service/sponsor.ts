@@ -71,9 +71,9 @@ const updateById = async (knex: Knex, sponsorId: number, {name,industry,contribu
   //create sponsor
   if (typeof name === 'string')
   {
-    newSponsor = {
+    newSponsor = [{
       name,industry,contribution,teamId
-    };
+    }];
   
   }
   const updatedSponsor = {

@@ -49,14 +49,14 @@ const updateById = async (knex: Knex, raceId: number, {name, date, location}):Pr
   //create race
   if (typeof name === 'string')
   {
-    newRace = {
-      name, date, location
-    };
+    newRace = [{
+      raceId, name, date, location
+    }];
   
   }
   const updatedRace = {
     ...newRace,
-    name, date, location
+    raceId, name, date, location
   };
   try {
     await raceRepo.updateRaceById(knex, raceId, updatedRace);
@@ -134,8 +134,8 @@ const postTeamsToRace = async (knex: Knex, raceId: number, teamIds: number[]) =>
   
   // Return the race and the list of valid teams added
   return {
-    raceId: race.raceId,
-    raceName: race.name,
+    raceId: (await race).raceId,
+    raceName: (await race).name,
     teamsAdded: validTeams
   };
 };

@@ -34,7 +34,7 @@ export const findAllRaces = async(knex: Knex):Promise<Race[]> => {
 };
 
 //GET race by ID
-export const findRaceById = async(knex:Knex, raceId:number):Promise<Race|null> => {
+export const findRaceById = async(knex:Knex, raceId:number):Promise<Race> => {
   const race = await knex(tables.race)
     .where('raceId', raceId)
     .select(SELECT_COLUMNS_RACE)

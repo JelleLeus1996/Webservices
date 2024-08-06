@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   env: 'NODE_ENV',
   port: 'PORT',
   database: {

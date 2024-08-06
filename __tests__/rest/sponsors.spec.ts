@@ -2,21 +2,18 @@ import supertest from 'supertest';
 import createServer from '../../src/createServer';
 import { tables, getKnex } from '../../src/data';
 import {Role} from '../../src/core/roles';
-import {Rider, Team} from '../../src/types/types'
+import {Sponsor, Team} from '../../src/types/types'
 import { withServer, login, loginAdmin } from '../supertest.setup'; 
 import {Knex} from 'knex';
+import sponsor from '../../src/repository/sponsor';
 
 const data =  {
-  riders: [{
-    id:1, nationality:'Poland', last_name:'Niewiadoma', first_name:'Katarzyna', birthday:new Date('1994-09-29'), points:10763, teamId:1, monthly_wage:50047.57 
-  },
-  { 
-    id:2, nationality:'Australia', last_name:'Cromwell', first_name:'Tiffany', birthday:new Date('1988-07-06'), points:3604, teamId:1, monthly_wage:7192.01 
-  },
-  { 
-    id:3, nationality:'Italy', last_name:'Paladin', first_name:'Soraya', birthday:new Date('1994-04-11'), points:3372, teamId:1, monthly_wage:6517.66 
-  },
-  ] as Rider[],
+  sponsors: [
+    { sponsorId: 1, name: 'Canyon', industry: 'Bicycle', contribution: 4500000, teamId: 1 },
+    { sponsorId: 2, name: 'SRAM', industry: 'Bicycle Components', contribution: 4000000, teamId: 1 },
+    // EF Education TIBCO SVB
+    { sponsorId: 3, name: 'EF Education', industry: 'Education', contribution: 4500000, teamId: 2 },
+  ] as Sponsor[],
   teams: [{
     teamId:1,
     name:'CyclingTeam 1', 
@@ -53,7 +50,7 @@ const data =  {
 };
 
 const dataToDelete = {
-  riders: [1, 2, 3],
+  sponsors: [1, 2, 3],
   teams: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27]
 };
 describe('Teams', ()=>{
@@ -81,40 +78,34 @@ describe('Teams', ()=>{
     server.close();
   });
  
-  const url = '/api/riders';
-  describe('GET /api/riders',()=>{
+  const url = '/api/sponsors';
+  describe('GET /api/sponsors',()=>{
 
     beforeAll(async()=>{
       await knex(tables.team).whereIn('teamId', dataToDelete.teams).delete();
-      await knex(tables.rider).whereIn('id', dataToDelete.riders).delete();
+      await knex(tables.sponsor).whereIn('id', dataToDelete.sponsors).delete();
       //testdata toevoegen aan de db
       await knex(tables.team).insert(data.teams);
-      await knex(tables.rider).insert(data.riders);
+      await knex(tables.sponsor).insert(data.sponsors);
     });
  
     afterAll(async()=>{
       await knex(tables.team).whereIn('teamId', dataToDelete.teams).delete();
-      await knex(tables.rider).whereIn('id', dataToDelete.riders).delete();
+      await knex(tables.sponsor).whereIn('id', dataToDelete.sponsors).delete();
     });
 
-    it('should return 200 and all riders', async()=>{
+    it('should return 200 and all sponsors', async()=>{
       const response = await request.get(url).set('Authorization',authHeaderAdmin).set('Accept', 'application/json');
       expect(response.status).toBe(200);
-      expect(response.body.items.length).toBe(3); //2 riders (Or body.count)
+      expect(response.body.items.length).toBe(3); //2 sponsors (Or body.count)
       expect(response.body.items[0]).toEqual({
-        id:1, 
-        nationality:'Poland', 
-        last_name:'Niewiadoma', 
-        first_name:'Katarzyna', 
-        birthday:'1994-09-29', 
-        points:10763, 
-        teamId:1,
+        sponsorId: 1, name: 'Canyon', industry: 'Bicycle', contribution: 4500000, teamId: 1
       });
       expect(response.body.items[1]).toEqual({
-        id:2, nationality:'Australia', last_name:'Cromwell', first_name:'Tiffany', birthday:'1988-07-06', points:3604, teamId:1
+        sponsorId: 2, name: 'SRAM', industry: 'Bicycle Components', contribution: 4000000, teamId: 1
       });
       expect(response.body.items[2]).toEqual({
-        id:3, nationality:'Italy', last_name:'Paladin', first_name:'Soraya', birthday:'1994-04-11', points:3372, teamId:1
+        sponsorId: 3, name: 'EF Education', industry: 'Education', contribution: 4500000, teamId: 2
       });
     });
     it('should 400 when given an argument', async () => {
@@ -125,31 +116,31 @@ describe('Teams', ()=>{
     });
   });
 
-  describe('GET /api/riders/:id',()=>{
+  describe('GET /api/sponsors/:id',()=>{
     beforeAll(async()=>{
       //testdata toevoegen aan de db
       await knex(tables.team).insert(data.teams);
-      await knex(tables.rider).insert(data.riders[0]);
+      await knex(tables.sponsor).insert(data.sponsors[0]);
     });
  
     afterAll(async()=>{
       await knex(tables.team).whereIn('teamId', dataToDelete.teams).delete();
-      await knex(tables.rider).whereIn('id', dataToDelete.riders).delete();
+      await knex(tables.sponsor).whereIn('id', dataToDelete.sponsors).delete();
     });
-    it('should return 200 and 1 rider', async()=>{
+    it('should return 200 and 1 sponsor', async()=>{
       const response = await request.get(`${url}/1`).set('Authorization',authHeader).set('Accept', 'application/json');
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
-        id:1, nationality:'Poland', last_name:'Niewiadoma', first_name:'Katarzyna', birthday:'1994-09-29', points:10763, teamId:1, monthly_wage:50047.57 
+        sponsorId: 1, name: 'Canyon', industry: 'Bicycle', contribution: 4500000, teamId: 1
       });
     });
   });
-  it ('should 404 when requesting not existing rider', async ()=> {
+  it ('should 404 when requesting not existing sponsor', async ()=> {
     const response = await request.get(`${url}/8`).set('Authorization',authHeaderAdmin).set('Accept', 'application/json');
  
     expect(response.statusCode).toBe(404);
     expect(response.body).toMatchObject({
-      message:'No rider with id 8 exists',
+      message:'No sponsor with id 8 exists',
       details: {
         id: 8,
       },
@@ -158,7 +149,7 @@ describe('Teams', ()=>{
     expect (response.body.stack).toBeTruthy();
   });
  
-  it ('should 400 with invalid rider id', async ()=> {
+  it ('should 400 with invalid sponsor id', async ()=> {
     const response = await request.get(`${url}/invalid`).set('Authorization',authHeaderAdmin).set('Accept', 'application/json');
  
     expect(response.statusCode).toBe(400);
@@ -170,75 +161,61 @@ describe('Teams', ()=>{
  
   });
   
-  describe('POST /api/riders', () => {
-    const ridersToDelete = [];
+  describe('POST /api/sponsors', () => {
+    const sponsorsToDelete = [];
          
-    //create some rider data; no riders before, we will create it ourself
+    //create some sponsor data; no sponsors before, we will create it ourself
     beforeAll(async () => {
 
     });
     afterAll(async () => {
       await knex(tables.team).whereIn('teamId', dataToDelete.teams).delete();
-      await knex(tables.rider).whereIn('id', dataToDelete.riders).delete();
+      await knex(tables.sponsor).whereIn('id', dataToDelete.sponsors).delete();
     });
   
-    it('should 201 and return the created rider', async () => {
+    it('should 201 and return the created sponsor', async () => {
       const response = await request.post(url).set('Authorization',authHeaderAdmin).set('Accept', 'application/json')
         .send({
-          'id':350, 
-          'nationality':'Belgium', 
-          'last_name':'Poppe', 
-          'first_name':'Febe', 
-          'birthday':'2000-07-14', 
-          'points':0, 
-          'teamId':1, 
-          'monthly_wage':500.00 
+          'sponsorId':25, 
+          'name':'EY Belgium', 
+          'industry':'consultancy', 
+          'contribution':7500000, 
         });
       expect(response.status).toBe(201);
-      expect(response.body.id).toBeTruthy();
-      expect(response.body.nationality).toBe('Belgium');
-      expect(response.body.last_name).toBe('Poppe');
-      expect(response.body.first_name).toBe('Febe');
-      expect(response.body.points).toBe(0);
-      expect(response.body.birthday).toBe('2000-07-14');
-      expect(response.body.teamId).toBe('1');
-      expect(response.body.monthly_wage).toBe(500.00);
-      expect(response.body.rider_cost).toBe(1177803.13);
-      
-      ridersToDelete.push(response.body.id);
+      expect(response.body.sponsorId).toBeTruthy();
+      expect(response.body.name).toBe('EY Belgium');
+      expect(response.body.industry).toBe('consultancy');
+      expect(response.body.contribution).toBe(7500000);      
+      sponsorsToDelete.push(response.body.sponsorId);
     });
   });
-  it ('should 400 when nationality is not filled', async ()=> {
+  it ('should 400 when name is not filled', async ()=> {
     const response = await request.post(url).set('Authorization',authHeaderAdmin).set('Accept', 'application/json')
       .send({
-        'id':350, 
-        'last_name':'Poppe', 
-        'first_name':'Febe', 
-        'birthday':'2000-07-14', 
-        'points':0, 
-        'teamId':1, 
-        'monthly_wage':500.00 
+        'sponsorId':25, 
+        'industry':'consultancy', 
+        'contribution':7500000, 
       });
     expect(response.statusCode).toBe(404);
     expect(response.body).toMatchObject({
       id:'NOT_FOUND',
-      message:'No nationality is given',
+      message:'No name is given',
       details: {
-        id: 350,
+        id: 25,
       },
              
     });
     expect (response.body.stack).toBeTruthy();
   });
-  describe ('DELETE /api/riders/:id',() =>{
-    //Create riders & teams
+  describe ('DELETE /api/sponsors/:id',() =>{
+    //Create sponsors & teams
     beforeAll(async()=>{
       await knex(tables.team).insert(data.teams);
     });
          
     afterAll(async () => {
       await knex(tables.team).whereIn('teamId', dataToDelete.teams).delete();
-      await knex(tables.rider).whereIn('id', dataToDelete.riders).delete();
+      await knex(tables.sponsor).whereIn('id', dataToDelete.sponsors).delete();
     });
          
     it('should 204 and return nothing', async ()=>{
@@ -254,7 +231,7 @@ describe('Teams', ()=>{
     
       expect(response.statusCode).toBe(404);
       expect(response.body).toMatchObject({
-        message:'No rider with id 37 exists',
+        message:'No sponsor with id 37 exists',
         details: {
           id: 37,
         },

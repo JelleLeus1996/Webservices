@@ -83,3 +83,7 @@ export interface Team {
   export interface RaceWithTeams extends Race {
     teams: BasicTeamInfo[];
   }
+
+  export interface TeamWithPassword extends Team {
+    password:string;
+  }

@@ -1,7 +1,7 @@
-module.exports={
+export default {
   logging : {
-    level:'silly', //logging until lowest level (6 - silly)
-    disabled: false //Normally don't need logging for testing > put this on true afterwards
+    level:'info', //logging until level (3 - info)
+    disabled: false
   },//add configurations of cors: webapplication will render on 5173 and maxAge is the time that it will have access (is in seconds, so 3hours here)
   cors: { // 👈 1
     origins: ['http://localhost:5173'], // 👈 2
@@ -11,7 +11,7 @@ module.exports={
     client: 'mysql2',
     host: 'localhost',
     port: 3306,
-    name: 'cyclingDatabase_test', //you'll have a second databank called cyclingDatabase_test
+    name: 'cyclingDatabase',
     username: 'root',
     password: '',
   },

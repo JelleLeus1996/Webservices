@@ -9,7 +9,7 @@ import {getLogger} from '../core/logging.js';
 import {Knex} from 'knex';
 
 import handleDBError from './_handleDBError';
-import {Team} from '../types/types'
+import {Team, TeamWithPassword} from '../types/types'
 
 interface Session {
   teamId: number;
@@ -51,13 +51,13 @@ const checkRole = (role: string, roles: string[]) => {
 };
  
 //created limited object that you will return
-const makeExposedTeam = (team: Team): Team => {
+const makeExposedTeam = (team: TeamWithPassword): Team => {
   const { password, password_hash, ...exposedTeam} =  team;
   return exposedTeam as Team
 };
 
 //Login
-const makeLoginData = async (team: Team):Promise<{token:string; team:Team}> => {
+const makeLoginData = async (team: TeamWithPassword):Promise<{token:string; team:Team}> => {
   const token = await generateJWT(team);
   return {
     token,
@@ -137,8 +137,8 @@ const create = async (knex: Knex, input: Omit<Team, 'roles'> & { password: strin
   }
   try {
     const passwordHash = await hashPassword(input.password);
-    const [newTeamId] = await teamsRepo.create(knex, {teamId, name, country, victories, points , team_status,
-      abbreviation, director, assistant, representative, bike, overhead_cost, email, passwordHash, roles:[Role.TEAMREPRESENTATIVE]});
+    const [newTeamId] = await teamsRepo.create(knex, 
+      {teamId, name, country, victories, points , team_status, abbreviation, director, assistant, representative, bike, overhead_cost, email, passwordHash, roles:[Role.TEAMREPRESENTATIVE]});
     const teamById = await getById(knex, newTeamId);
     return teamById;
   }
