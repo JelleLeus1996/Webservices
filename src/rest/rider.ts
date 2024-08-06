@@ -6,7 +6,8 @@ import Koa from 'koa';
 import riderService from '../service/rider';
 import validate from '../core/validation';
 import {requireAuthentication, makeRequireRole} from '../core/auth';
-import Role = require('../core/roles');
+import {Role} from '../core/roles';
+import {Knex} from 'knex';
 
 const JoiDate = Joi.extend(dateExtension);
 
@@ -30,25 +31,25 @@ const checkTeam = (ctx: Koa.Context, teamId: number)=>{
 };
 
 //Verification via paramater of rider to get teamId
-const checkTeamIdViaRider = async (ctx: Koa.Context, next: Koa.Next) => {
+const checkTeamIdViaRider = async (knex: Knex, ctx: Koa.Context, next: Koa.Next) => {
   const { id } = ctx.params;
-  const rider = await riderService.getById(Number(id));
+  const rider = await riderService.getById(knex, Number(id));
   checkTeam(ctx, rider.teamId);
   return next();
 };
 
 //GET all riders
-const getRiders = async (ctx: Koa.Context) => {
-  ctx.body = await riderService.getAll();
+const getRiders = async (knex: Knex, ctx: Koa.Context) => {
+  ctx.body = await riderService.getAll(knex);
 };
-const getAllRidersInfo = async (ctx: Koa.Context) => {
-  ctx.body = await riderService.getAllRidersInfo();
+const getAllRidersInfo = async (knex: Knex, ctx: Koa.Context) => {
+  ctx.body = await riderService.getAllRidersInfo(knex);
 };
 
 //GET all riders with team info
-const getAllRidersWithTeam = async (ctx: Koa.Context) =>
+const getAllRidersWithTeam = async (knex: Knex, ctx: Koa.Context) =>
 {
-  ctx.body = await riderService.getAllWithTeam();
+  ctx.body = await riderService.getAllWithTeam(knex);
 };
 
 //No input, so no validations of input
@@ -57,8 +58,8 @@ getAllRidersInfo.validationScheme = null;
 getAllRidersWithTeam.validationScheme = null;
 
 //GET individual rider (by id)
-const getRiderById = async (ctx: Koa.Context) => {
-  ctx.body = await riderService.getById(Number(ctx.params.id));
+const getRiderById = async (knex: Knex, ctx: Koa.Context) => {
+  ctx.body = await riderService.getById(knex, Number(ctx.params.id));
 };
 
 //Validation of the paramater id
@@ -69,8 +70,8 @@ getRiderById.validationScheme = {
 };
 
 //GET individual rider (by full name)
-const getRiderByFullName = async (ctx: Koa.Context) => {
-  ctx.body = await riderService.getRiderByFullName(
+const getRiderByFullName = async (knex: Knex, ctx: Koa.Context) => {
+  ctx.body = await riderService.getRiderByFullName(knex,
     String(ctx.params.first_name),
     String(ctx.params.last_name));
 };
@@ -84,8 +85,8 @@ getRiderByFullName.validationScheme = {
 };
 
 //GET individual team (by id)
-const getRidersFromTeam = async (ctx: Koa.Context) => {
-  ctx.body = await riderService.getRidersFromTeam(Number(ctx.params.teamId));
+const getRidersFromTeam = async (knex: Knex, ctx: Koa.Context) => {
+  ctx.body = await riderService.getRidersFromTeam(knex, Number(ctx.params.teamId));
 };
 
 //Validation of the paramater id
@@ -96,8 +97,8 @@ getRidersFromTeam.validationScheme={
 };
 
 //UPDATE rider
-const updateRider = async (ctx: Koa.Context) => {
-  ctx.body = await riderService.updateById(Number(ctx.params.id), {
+const updateRider = async (knex: Knex, ctx: Koa.Context) => {
+  ctx.body = await riderService.updateById(knex,Number(ctx.params.id), {
     ...ctx.request.body,
     nationality: String(ctx.request.body.nationality),
     last_name: String(ctx.request.body.last_name),
@@ -126,8 +127,8 @@ updateRider.validationScheme={
 };
 
 //POST rider
-const createRider = async (ctx: Koa.Context) => {
-  const newRider = await riderService.create({
+const createRider = async (knex: Knex, ctx: Koa.Context) => {
+  const newRider = await riderService.create(knex,{
     ...ctx.request.body,
     nationality: String(ctx.request.body.nationality),
     last_name: String(ctx.request.body.last_name),
@@ -154,8 +155,8 @@ createRider.validationScheme={
 };
 
 //DELETE rider
-const deleteRider = async (ctx: Koa.Context) => {
-  await riderService.deleteById(Number(ctx.params.id));
+const deleteRider = async (knex: Knex, ctx: Koa.Context) => {
+  await riderService.deleteById(knex, Number(ctx.params.id));
   ctx.status = 204;
 };
 
@@ -181,8 +182,8 @@ export default (app: Router) => {
   const requireAdmin = makeRequireRole(Role.ADMIN);
 
   //GET
-  router.get('/', requireAuthentication, validate(getRiders), getRiders);
-  router.get('/allInfo', requireAuthentication, validate(getAllRidersInfo), checkTeamId, getAllRidersInfo);
+  router.get('/', requireAuthentication, validate(getRiders.validationScheme), getRiders);
+  router.get('/allInfo', requireAuthentication, validate(getAllRidersInfo.validationScheme), checkTeamId, getAllRidersInfo);
   router.get('/all/getAllRidersWithTeam', requireAuthentication, validate(getAllRidersWithTeam.validationScheme),getAllRidersWithTeam);
   router.get('/full-name/:first_name/:last_name', requireAuthentication, validate(getRiderByFullName.validationScheme), checkTeamId, getRiderByFullName);
   router.get('/:id', requireAuthentication, validate(getRiderById.validationScheme),checkTeamIdViaRider, getRiderById);

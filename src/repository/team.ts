@@ -79,7 +79,7 @@ export const findTeamsWithRiders = async (knex: Knex, teamId: number): Promise<T
   return transformedTeam;
 };
 
-const findAllTeamsInfo = async(knex: Knex) => {
+export const findAllTeamsInfo = async(knex: Knex) => {
   return await knex(tables.team)
     .select()
     .orderBy('name','ASC');
@@ -115,13 +115,13 @@ export const transformTeam = ({
   };
 };
 
-const findById=async(knex: Knex, id: number) => {
+export const findById=async(knex: Knex, id: number) => {
   const riders = await knex(tables.team)
     .where(`${tables.team}.teamId`, id)
     .first(SELECT_COLUMNS_TEAMS);
   return riders;
 };
-const findByName=async(knex: Knex, name: string) => {
+export const findByName=async(knex: Knex, name: string) => {
   const riders = await knex(tables.team)
     .where(`${tables.team}.name`, name)
     .first(SELECT_COLUMNS_TEAMS);
@@ -129,7 +129,7 @@ const findByName=async(knex: Knex, name: string) => {
 };
 
 
-const findCount = async (knex: Knex) =>{
+export const findCount = async (knex: Knex) =>{
   const [count] = await knex(tables.team).count();
   return count['count(*)'];
 };
@@ -155,7 +155,7 @@ export const create = async (knex: Knex, teamData: Omit<Team, 'teamId'>): Promis
   });
 };
   
-const updateById = async (knex: Knex, teamId: number, {name, country, victories, points , team_status,
+export const updateById = async (knex: Knex, teamId: number, {name, country, victories, points , team_status,
   abbreviation, director, assistant, representative, bike, budget, overhead_cost, rider_cost,email})=>{
   try {
     await knex(tables.team)
@@ -170,7 +170,7 @@ const updateById = async (knex: Knex, teamId: number, {name, country, victories,
   }
 };
  
-const deleteById = async (knex: Knex, id: number) =>
+export const deleteById = async (knex: Knex, id: number) =>
 {
   try {
     const rowsAffected = await knex(tables.team)
@@ -183,11 +183,11 @@ const deleteById = async (knex: Knex, id: number) =>
     throw error;
   }
 };
-const findByEmail = (knex: Knex, email: string) => {
+export const findByEmail = (knex: Knex, email: string) => {
   return knex(tables.team).where('email', email).first();
 };
 
-const findAllTeamsWithFinancials = async (knex: Knex) => {
+export const findAllTeamsWithFinancials = async (knex: Knex) => {
   const teamsWithBudget = await knex(tables.team)
     .select(
       `${tables.team}.teamId`,

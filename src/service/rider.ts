@@ -1,7 +1,7 @@
 import ridersRepo from '../repository/rider';
 import teamRepo from '../repository/team';
 import validation from '../schema/riderSchema';
-import Knex from 'knex'
+import { Knex } from 'knex';
 import handleDBError from './_handleDBError';
 
 //GET
@@ -9,40 +9,40 @@ const getById = async (knex: Knex, id:number) => {
   const rider = await ridersRepo.findById(knex, id);
   if (!rider)
   {
-    throw Error(`There is no rider with id ${id}`, {id});
+    throw Error(`There is no rider with id ${id}`);
   }
   return rider;
 };
 
-const getAll = async () => {
-  const riders = await ridersRepo.findAll();
+const getAll = async (knex: Knex) => {
+  const riders = await ridersRepo.findAll(knex);
   return { items: riders, count:riders.length };
 };
 
-const getAllRidersInfo = async () => {
-  const riders = await ridersRepo.findAllRidersInfo();
+const getAllRidersInfo = async (knex: Knex) => {
+  const riders = await ridersRepo.findAllRidersInfo(knex);
   return { items: riders, count:riders.length };
 };
-const getRiderByFullName = async (first_name: string, last_name: string) =>
+const getRiderByFullName = async (knex: Knex, first_name: string, last_name: string) =>
 {
-  const rider = await ridersRepo.findByName(first_name,last_name);
+  const rider = await ridersRepo.findByName(knex, first_name,last_name);
   if (!rider)
   {
-    throw Error(`There is no rider called ${first_name} ${last_name}`, {first_name}, {last_name});
+    throw Error(`There is no rider called ${first_name} ${last_name}`);
   }
   return rider;
 };
 
-const getRidersFromTeam = async(teamId: number) => {
-  const riders = await ridersRepo.findAllFromTeam(teamId);
+const getRidersFromTeam = async(knex: Knex, teamId: number) => {
+  const riders = await ridersRepo.findAllFromTeam(knex, teamId);
   if (!riders)
   {
-    throw Error(`There is no team with teamId ${teamId}`, {teamId});
+    throw Error(`There is no team with teamId ${teamId}`);
   }
   return { items: riders, count:riders.length};
 };
-const getAllWithTeam = async () => {
-  const items = await ridersRepo.findAllWithTeam();
+const getAllWithTeam = async (knex: Knex) => {
+  const items = await ridersRepo.findAllWithTeam(knex);
   return {
     items,
     count: items.length,
@@ -51,7 +51,7 @@ const getAllWithTeam = async () => {
 
 //UPDATE
 let newRider = [];
-const updateById = async (id: number, {nationality, last_name, first_name, birthday, points, teamId, monthly_wage}) =>
+const updateById = async (knex: Knex, id: number, {nationality, last_name, first_name, birthday, points, teamId, monthly_wage}) =>
 {
   const valid = validation.riderSchema.validate({id, nationality, last_name, first_name, teamId, birthday, points, monthly_wage});
   if (valid.error)
@@ -59,13 +59,13 @@ const updateById = async (id: number, {nationality, last_name, first_name, birth
     throw new Error(valid.error.details[0].message);
   }
   //Check if the rider exists
-  const existing = await ridersRepo.findById(id);
+  const existing = await ridersRepo.findById(knex, id);
   if (!existing)
   {
     throw new Error('Rider doesn\'t exist');
   }
   //Check team
-  const team = await teamRepo.findById(teamId);
+  const team = await teamRepo.findById(knex, teamId);
   if (!team)
     throw new Error ('Team does not exist');
   //create rider
@@ -87,7 +87,7 @@ const updateById = async (id: number, {nationality, last_name, first_name, birth
     monthly_wage,
   };
   try {
-    await ridersRepo.updateById(id, updatedRider);
+    await ridersRepo.updateById(knex, id, updatedRider);
     return updatedRider;
   }catch(error){
     throw handleDBError(error);
@@ -95,18 +95,18 @@ const updateById = async (id: number, {nationality, last_name, first_name, birth
 };
 
 //CREATE
-const create= async ({id, nationality, last_name, first_name, birthday, points, teamId, monthly_wage}) => {
+const create= async (knex: Knex, {id, nationality, last_name, first_name, birthday, points, teamId, monthly_wage}) => {
   const valid = validation.riderSchema.validate({id, nationality, last_name, first_name, teamId, birthday, points, monthly_wage});
   if (valid.error)
   {
     throw new Error(valid.error.details[0].message);
   }
 
-  const team = await teamRepo.findById(t=>t.teamId===teamId);
+  const team = await teamRepo.findById(knex, teamId);
   if (!team)
     throw new Error ('Team does not exist');
   try {
-    const rider = await ridersRepo.create({
+    const rider = await ridersRepo.create(knex,{
       id, 
       nationality, 
       last_name, 
@@ -115,20 +115,20 @@ const create= async ({id, nationality, last_name, first_name, birthday, points, 
       birthday, 
       points,
       monthly_wage});
-    return getById(rider);
+    return getById(knex, id);
   }catch (error) {
     throw handleDBError(error);
   }
 };
 
 //DELETE
-const deleteById = async (id: number) => {
-  const rider = getById(id);
+const deleteById = async (knex: Knex, id: number) => {
+  const rider = getById(knex, id);
 
   if (!rider) {
     throw new Error('Rider not found');
   }
-  await ridersRepo.deleteById(id);
+  await ridersRepo.deleteById(knex, id);
   return rider;
 };
 

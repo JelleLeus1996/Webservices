@@ -6,7 +6,8 @@ import Koa from 'koa';
 import sponsorService from '../service/sponsor';
 import validate from '../core/validation';
 import {requireAuthentication, makeRequireRole} from '../core/auth';
-import Role = require('../core/roles');
+import {Role} from '../core/roles';
+import {Knex} from 'knex';
 
 const JoiDate = Joi.extend(dateExtension);
 
@@ -30,25 +31,25 @@ const checkTeam = (ctx: Koa.Context, teamId: number)=>{
 };
 
 //Verification via paramater of sponsor to get teamId
-const checkTeamIdViaSponsor = async (ctx: Koa.Context, next: Koa.Next) => {
+const checkTeamIdViaSponsor = async (knex: Knex, ctx: Koa.Context, next: Koa.Next) => {
   const { id } = ctx.params;
-  const sponsor = await sponsorService.getById(Number(id));
+  const sponsor = await sponsorService.getById(knex, Number(id));
   checkTeam(ctx, sponsor.teamId);
   return next();
 };
 
 //GET all sponsors
-const getSponsors = async (ctx: Koa.Context) => {
-  ctx.body = await sponsorService.getAll();
+const getSponsors = async (knex: Knex, ctx: Koa.Context) => {
+  ctx.body = await sponsorService.getAll(knex);
 };
-const getAllSponsorsInfo = async (ctx: Koa.Context) => {
-  ctx.body = await sponsorService.getAllWithFinancials();
+const getAllSponsorsInfo = async (knex: Knex, ctx: Koa.Context) => {
+  ctx.body = await sponsorService.getAllWithFinancials(knex);
 };
 
 //GET all sponsors with team info
-const getAllSponsorInfoWithTeams = async (ctx: Koa.Context) =>
+const getAllSponsorInfoWithTeams = async (knex: Knex, ctx: Koa.Context) =>
 {
-  ctx.body = await sponsorService.getAllWithTeams();
+  ctx.body = await sponsorService.getAllWithTeams(knex);
 };
 
 //No input, so no validations of input
@@ -57,8 +58,8 @@ getAllSponsorsInfo.validationScheme = null;
 getAllSponsorInfoWithTeams.validationScheme = null;
 
 //GET individual sponsor (by id)
-const getSponsorById = async (ctx: Koa.Context) => {
-  ctx.body = await sponsorService.getById(Number(ctx.params.id));
+const getSponsorById = async (knex: Knex, ctx: Koa.Context) => {
+  ctx.body = await sponsorService.getById(knex, Number(ctx.params.id));
 };
 
 //Validation of the paramater id
@@ -69,8 +70,8 @@ getSponsorById.validationScheme = {
 };
 
 //GET individual sponsor by name
-const getSponsorByName = async (ctx: Koa.Context) => {
-  ctx.body = await sponsorService.getByName(
+const getSponsorByName = async (knex: Knex, ctx: Koa.Context) => {
+  ctx.body = await sponsorService.getByName(knex,
     String(ctx.params.name));
 };
 
@@ -82,8 +83,8 @@ getSponsorByName.validationScheme = {
 };
 
 //GET individual team (by id)
-const getSponsorsFromTeam = async (ctx: Koa.Context) => {
-  ctx.body = await sponsorService.getByTeamId(Number(ctx.params.teamId));
+const getSponsorsFromTeam = async (knex: Knex, ctx: Koa.Context) => {
+  ctx.body = await sponsorService.getByTeamId(knex, Number(ctx.params.teamId));
 };
 
 //Validation of the paramater id
@@ -96,8 +97,8 @@ getSponsorsFromTeam.validationScheme={
 
 
 //UPDATE sponsor
-const updateSponsor = async (ctx: Koa.Context) => {
-  ctx.body = await sponsorService.updateById(Number(ctx.params.id), {
+const updateSponsor = async (knex: Knex, ctx: Koa.Context) => {
+  ctx.body = await sponsorService.updateById(knex, Number(ctx.params.id), {
     ...ctx.request.body,
     name: String(ctx.request.body.name),
     industry: String(ctx.request.body.industry),
@@ -120,8 +121,8 @@ updateSponsor.validationScheme={
 };
 
 //POST sponsor
-const createSponsor = async (ctx: Koa.Context) => {
-  const newSponsor = await sponsorService.create({
+const createSponsor = async (knex: Knex, ctx: Koa.Context) => {
+  const newSponsor = await sponsorService.create(knex,{
     ...ctx.request.body,
     name: String(ctx.request.body.name),
     industry: String(ctx.request.body.industry),
@@ -142,8 +143,8 @@ createSponsor.validationScheme={
 };
 
 //DELETE sponsor
-const deleteSponsor = async (ctx: Koa.Context) => {
-  await sponsorService.deleteById(Number(ctx.params.id));
+const deleteSponsor = async (knex: Knex, ctx: Koa.Context) => {
+  await sponsorService.deleteById(knex, Number(ctx.params.id));
   ctx.status = 204;
 };
 
@@ -168,8 +169,8 @@ export default (app: Router) => {
   const requireAdmin = makeRequireRole(Role.ADMIN);
 
   //GET
-  router.get('/', requireAuthentication, validate(getSponsors), getSponsors);
-  router.get('/allInfo', requireAuthentication, validate(getAllSponsorsInfo), checkTeamId, getAllSponsorsInfo);
+  router.get('/', requireAuthentication, validate(getSponsors.validationScheme), getSponsors);
+  router.get('/allInfo', requireAuthentication, validate(getAllSponsorsInfo.validationScheme), checkTeamId, getAllSponsorsInfo);
   router.get('/all/getAllSponsorsWithTeam', requireAuthentication, validate(getAllSponsorInfoWithTeams.validationScheme),getAllSponsorInfoWithTeams);
   router.get('/name/:name', requireAuthentication, validate(getSponsorByName.validationScheme), checkTeamId, getSponsorByName);
   router.get('/:id', requireAuthentication, validate(getSponsorById.validationScheme),checkTeamIdViaSponsor, getSponsorById);

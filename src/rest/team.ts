@@ -6,16 +6,17 @@ import Koa from 'koa';
 import teamService from '../service/team';
 import validate from '../core/validation';
 import {requireAuthentication, makeRequireRole} from '../core/auth';
-import Role = require('../core/roles');
+import {Role} from '../core/roles';
+import {Knex} from 'knex';
 
 const JoiDate = Joi.extend(dateExtension);
 
 //Login to authenticate and to (dis)allow certain requests
-const login = async (ctx: Koa.Context, next: Koa.Next) => {
+const login = async (knex: Knex, ctx: Koa.Context, next: Koa.Next) => {
   const {email, password} = ctx.
     request.body;
   console.log('Received request body:', {email, password});
-  const token = await teamService.login(email, password);
+  const token = await teamService.login(knex, email, password);
   ctx.body=token;
   return next;
 };
@@ -43,22 +44,22 @@ const checkTeamId = (ctx: Koa.Context, next: Koa.Next) => {
 };
 
 //GET all teams
-const getTeams = async (ctx: Koa.Context) => {
-  ctx.body = await teamService.getTeams();
+const getTeams = async (knex: Knex, ctx: Koa.Context) => {
+  ctx.body = await teamService.getTeams(knex);
 };
-const getTeamWithRiders = async (ctx: Koa.Context) => {
+const getTeamWithRiders = async (knex: Knex, ctx: Koa.Context) => {
   ctx.body = await teamService.getAll(ctx.params.teamId);
 };
-const getAllTeamsInfo = async (ctx: Koa.Context) => {
-  ctx.body = await teamService.getAllTeamsInfo();
+const getAllTeamsInfo = async (knex: Knex, ctx: Koa.Context) => {
+  ctx.body = await teamService.getAllTeamsInfo(knex);
 };
 //No input, so no validations of input
 getTeams.validationScheme = null;
 getAllTeamsInfo.validationScheme = null;
 
 //GET individual team (by teamid)
-const getTeamById = async (ctx: Koa.Context) => {
-  ctx.body = await teamService.getById(ctx.params.teamId);
+const getTeamById = async (knex: Knex, ctx: Koa.Context) => {
+  ctx.body = await teamService.getById(knex, ctx.params.teamId);
 };
 
 //Validation of the paramater teamid
@@ -69,8 +70,8 @@ getTeamById.validationScheme = {
 };
 
 //GET individual team (by name)
-const getTeamByName = async (ctx: Koa.Context) => {
-  ctx.body = await teamService.getTeamByName(String(ctx.params.name));
+const getTeamByName = async (knex: Knex, ctx: Koa.Context) => {
+  ctx.body = await teamService.getTeamByName(knex, String(ctx.params.name));
 };
 
 //Validation of the paramater name
@@ -81,8 +82,8 @@ getTeamByName.validationScheme = {
 };
 
 //UPDATE team
-const updateTeam = async (ctx: Koa.Context) => {
-  ctx.body = await teamService.updateById(Number(ctx.params.teamId),{
+const updateTeam = async (knex: Knex, ctx: Koa.Context) => {
+  ctx.body = await teamService.updateById(knex, Number(ctx.params.teamId),{
     ...ctx.request.body,
     name: String(ctx.request.body.name),
     country: String(ctx.request.body.country),
@@ -123,8 +124,8 @@ updateTeam.validationScheme={
 };
 
 //POST team
-const createTeam = async (ctx: Koa.Context) => {
-  const newTeam = await teamService.create({
+const createTeam = async (knex: Knex, ctx: Koa.Context) => {
+  const newTeam = await teamService.create(knex, {
     ...ctx.request.body,
     teamId: Number(ctx.request.body.teamId),
     name: String(ctx.request.body.name),
@@ -167,8 +168,8 @@ createTeam.validationScheme={
 };
 
 //DELETE team
-const deleteTeam = async (ctx: Koa.Context) => {
-  teamService.deleteById(Number(ctx.params.teamId));
+const deleteTeam = async (knex: Knex, ctx: Koa.Context) => {
+  teamService.deleteById(knex, Number(ctx.params.teamId));
   ctx.stats = 204;
 };
 

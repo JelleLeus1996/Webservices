@@ -13,10 +13,6 @@ const SELECT_COLUMNS_RACE: (keyof Race)[] = [
   'raceId', 'name', 'date', 'location'
 ];
 
-const SELECT_COLUMNS_RACE_TEAM: (keyof Team)[] = [
-  `${tables.race_team}.raceId`, `${tables.race_team}.teamId`, `${tables.team}.name as team_name`
-];
-
 type RiderTeamCombined = Rider & {
   name: string;
   country: string;
@@ -118,5 +114,18 @@ export const updateById = async (knex: Knex, id:number, {nationality, last_name,
   }
 };
  
-
-export default {create,updateById,findByName,findAll, findById, findAllFromTeam, findAllRidersInfo, findAllWithTeam};
+//DELETE sponsor by id
+export const deleteById = async (knex:Knex, riderId:number) =>
+  {
+    try {
+      const rowsAffected = await knex(tables.rider)
+        .where(`${tables.rider}.riderId`,riderId)
+        .delete();
+   
+      return rowsAffected > 0;
+    }catch (error){
+      getLogger().error('Error in deleteById',{error,});
+      throw error;
+    }
+  };
+export default {create,updateById,findByName,findAll, findById, findAllFromTeam, findAllRidersInfo, findAllWithTeam, deleteById};

@@ -1,18 +1,19 @@
-import ServiceError from '../core/serviceError';
+import { ServiceError } from '../core/serviceError';
 import teamsRepo from '../repository/team';
 import validation from '../schema/teamSchema';
 import {hashPassword} from '../core/password';
-import Role from '../core/roles';
+import {Role} from '../core/roles';
 import {verifyPassword} from '../core/password';
 import {generateJWT, verifyJWT} from '../core/jwt';
 import {getLogger} from '../core/logging.js';
+import {Knex} from 'knex';
 
 import handleDBError from './_handleDBError';
 import {Team} from '../types/types'
 
 interface Session {
   teamId: number;
-  roles: string[];
+  roles: string;
   authToken: string;
 }
 
@@ -64,8 +65,8 @@ const makeLoginData = async (team: Team):Promise<{token:string; team:Team}> => {
   };
 };
  
-const login = async(email:string , password:string): Promise<{token:string; team:Team}> => {
-  const team = await teamsRepo.findByEmail(email);
+const login = async(knex: Knex, email:string , password:string): Promise<{token:string; team:Team}> => {
+  const team = await teamsRepo.findByEmail(knex, email);
   if(!team){
     throw ServiceError.unauthorized('The given email or password do not match');
   }
@@ -78,9 +79,9 @@ const login = async(email:string , password:string): Promise<{token:string; team
 };
 
 //GET
-const getTeams = async (): Promise<{ items: Team[]; count: number }> => {
+const getTeams = async (knex: Knex): Promise<{ items: Team[]; count: number }> => {
   try {
-    const teams = await teamsRepo.findAllTeams();
+    const teams = await teamsRepo.findAllTeams(knex);
     console.log('Teams:',teams);
     return { items: teams.map(makeExposedTeam), count:teams.length };
   } catch (error) {
@@ -89,9 +90,9 @@ const getTeams = async (): Promise<{ items: Team[]; count: number }> => {
   }
 };
 
-const getAllTeamsInfo = async (): Promise<{ items: Team[]; count: number }> => {
+const getAllTeamsInfo = async (knex: Knex): Promise<{ items: Team[]; count: number }> => {
   try {
-    const teams = await teamsRepo.findAllTeamsInfo();
+    const teams = await teamsRepo.findAllTeamsInfo(knex);
     console.log('Teams:',teams);
     return { items: teams.map(makeExposedTeam), count:teams.length };
   } catch (error) {
@@ -100,16 +101,16 @@ const getAllTeamsInfo = async (): Promise<{ items: Team[]; count: number }> => {
   }
 };
 
-const getAll = async (teamId: number): Promise<{ items: Team[]; count: number }> => {
-  const teams = await teamsRepo.findAll(teamId);
+const getAll = async (knex: Knex): Promise<{ items: Team[]; count: number }> => {
+  const teams = await teamsRepo.findAllTeams(knex);
   return {
     items: teams.map(makeExposedTeam),
     count:teams.length,
   };
 };
-const getById = async (id: number): Promise<Team> =>
+const getById = async (knex: Knex, id: number): Promise<Team> =>
 {
-  const team = await teamsRepo.findById(id);
+  const team = await teamsRepo.findById(knex, id);
   if (!team)
   {
     throw ServiceError.notFound(`No team with id ${id} exists`, {id});
@@ -117,28 +118,28 @@ const getById = async (id: number): Promise<Team> =>
   return makeExposedTeam(team);
 };
  
-const getTeamByName = async (name: string): Promise<Team> =>
+const getTeamByName = async (knex: Knex, name: string): Promise<Team> =>
 {
-  const team =  await teamsRepo.findByName(name);
+  const team =  await teamsRepo.findByName(knex, name);
   if (!team)
   {
     throw ServiceError.notFound(`No team with name ${name} exists`, {name});
   }
   return makeExposedTeam(team);
 };
-const create = async (input: Omit<Team, 'roles'> & { password: string }): Promise<Team> =>
+const create = async (knex: Knex, input: Omit<Team, 'roles'> & { password: string }): Promise<Team> =>
 {
   const { teamId } = input;
-  const existingTeam = await teamsRepo.findById(teamId);
+  const existingTeam = await teamsRepo.findById(knex, teamId);
   if (existingTeam)
   {
-    throw Error (`There is already a team with id ${teamId}.`, {teamId});
+    throw Error (`There is already a team with id ${teamId}.`);
   }
   try {
     const passwordHash = await hashPassword(input.password);
-    const [newTeamId] = await teamsRepo.create({teamId, name, country, victories, points , team_status,
+    const [newTeamId] = await teamsRepo.create(knex, {teamId, name, country, victories, points , team_status,
       abbreviation, director, assistant, representative, bike, overhead_cost, email, passwordHash, roles:[Role.TEAMREPRESENTATIVE]});
-    const teamById = await getById(newTeamId);
+    const teamById = await getById(knex, newTeamId);
     return teamById;
   }
   catch (error){
@@ -146,17 +147,17 @@ const create = async (input: Omit<Team, 'roles'> & { password: string }): Promis
   }
  
 };
-const deleteById = async (teamId: number): Promise<void> =>
+const deleteById = async (knex: Knex, teamId: number): Promise<void> =>
 {
-  const id = await getById(teamId);
-  const deleted = await teamsRepo.deleteById(id);
+  const id = await getById(knex, teamId);
+  const deleted = await teamsRepo.deleteById(knex, teamId);
   if (!deleted)
   {
     throw ServiceError.notFound(`No team with id ${teamId} exists`,{teamId});
   }
 };
 let updatedTeam: Partial<Team> = {};
-const updateById = async (teamId, {name, country, victories, points , team_status,
+const updateById = async (knex: Knex, teamId: number, {name, country, victories, points , team_status,
   abbreviation, director, assistant, representative, bike, overhead_cost, email}) =>
 {
   const valid = validation.teamSchema.validate({teamId, name, country, victories, points , team_status,
@@ -166,7 +167,7 @@ const updateById = async (teamId, {name, country, victories, points , team_statu
     throw new Error(valid.error.details[0].message);
   }
   //Check team
-  const team = teamsRepo.findById(teamId);
+  const team = teamsRepo.findById(knex, teamId);
   if (!team)
     throw ServiceError.notFound(`No team with id ${teamId} exists`, {teamId});
   //create team
@@ -183,7 +184,7 @@ const updateById = async (teamId, {name, country, victories, points , team_statu
   };
  
   try {
-    await teamsRepo.updateById(teamId, updateTeam);
+    await teamsRepo.updateById(knex, teamId, updateTeam);
  
     return updateTeam;
   }

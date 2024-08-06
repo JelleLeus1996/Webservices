@@ -6,24 +6,25 @@ import Koa from 'koa';
 import raceService from '../service/race';
 import validate from '../core/validation';
 import {requireAuthentication, makeRequireRole} from '../core/auth';
-import Role = require('../core/roles');
+import {Role} from '../core/roles';
+import {Knex} from 'knex';
 
 const JoiDate = Joi.extend(dateExtension);
 
 //GET all races
-const getRaces = async (ctx: Koa.Context) => {
-  ctx.body = await raceService.getAll();
+const getRaces = async (knex: Knex, ctx: Koa.Context) => {
+  ctx.body = await raceService.getAll(knex);
 };
 
 //GET race by id
-const getRaceById = async (ctx: Koa.Context) => {
-  ctx.body = await raceService.getById(Number(ctx.params.id));
+const getRaceById = async (knex: Knex, ctx: Koa.Context) => {
+  ctx.body = await raceService.getById(knex, Number(ctx.params.id));
 };
 
 //GET race by id with all teams
-const getRaceWithTeams = async (ctx: Koa.Context) =>
+const getRaceWithTeams = async (knex: Knex, ctx: Koa.Context) =>
 {
-  ctx.body = await raceService.getByIdWithTeams(Number(ctx.params.id));
+  ctx.body = await raceService.getByIdWithTeams(knex, Number(ctx.params.id));
 };
 
 //No input, so no validations of input
@@ -44,8 +45,8 @@ getRaceWithTeams.validationScheme = {
 };
 
 //UPDATE race
-const updateRace = async (ctx: Koa.Context) => {
-  ctx.body = await raceService.updateById(Number(ctx.params.id), {
+const updateRace = async (knex: Knex, ctx: Koa.Context) => {
+  ctx.body = await raceService.updateById(knex, Number(ctx.params.id), {
     ...ctx.request.body,
     name: String(ctx.request.body.name),
     date: new Date(ctx.request.body.date),
@@ -66,8 +67,8 @@ updateRace.validationScheme={
 };
 
 //POST race
-const createRace = async (ctx: Koa.Context) => {
-  const newRace = await raceService.create({
+const createRace = async (knex: Knex, ctx: Koa.Context) => {
+  const newRace = await raceService.create(knex, {
     ...ctx.request.body,
     name: String(ctx.request.body.name),
     date: new Date(ctx.request.body.industry),
@@ -87,8 +88,8 @@ createRace.validationScheme={
 };
 
 //DELETE sponsor
-const deleteRace = async (ctx: Koa.Context) => {
-  await raceService.deleteById(Number(ctx.params.id));
+const deleteRace = async (knex: Knex, ctx: Koa.Context) => {
+  await raceService.deleteById(knex, Number(ctx.params.id));
   ctx.status = 204;
 };
 
@@ -100,8 +101,8 @@ deleteRace.validationScheme = {
 };
 
 //Add team to a race
-const addTeamToRace = async (ctx: Koa.Context) => {
-  await raceService.postTeamToRace(Number(ctx.params.raceId),Number(ctx.params.teamId));
+const addTeamToRace = async (knex: Knex, ctx: Koa.Context) => {
+  await raceService.postTeamToRace(knex, Number(ctx.params.raceId),Number(ctx.params.teamId));
   ctx.status = 204;
 };
 //Validation of the paramater id
@@ -113,8 +114,8 @@ addTeamToRace.validationScheme = {
 };
 
 //Add teams to a race
-const addTeamsToRace = async (ctx: Koa.Context) => {
-  await raceService.postTeamsToRace(Number(ctx.params.raceId),Number(ctx.params.teamIds));
+const addTeamsToRace = async (knex: Knex, ctx: Koa.Context) => {
+  await raceService.postTeamsToRace(knex, Number(ctx.params.raceId),Number[(ctx.params.teamIds)]);
   ctx.status = 204;
 };
 //Validation of the paramater id
@@ -128,8 +129,8 @@ addTeamsToRace.validationScheme = {
 };
 
 //delete team from a race
-const deleteTeamFromRace = async (ctx: Koa.Context) => {
-  await raceService.deleteTeamFromRace(Number(ctx.params.raceId),Number(ctx.params.teamId));
+const deleteTeamFromRace = async (knex: Knex, ctx: Koa.Context) => {
+  await raceService.deleteTeamFromRace(knex, Number(ctx.params.raceId),Number(ctx.params.teamId));
   ctx.status = 204;
 };
 //Validation of the paramater id
@@ -141,8 +142,8 @@ deleteTeamFromRace.validationScheme = {
 };
 
 //delete all teams from a race
-const deleteAllTeamsFromRace = async (ctx: Koa.Context) => {
-  await raceService.deleteAllTeamsFromRace(Number(ctx.params.id));
+const deleteAllTeamsFromRace = async (knex: Knex, ctx: Koa.Context) => {
+  await raceService.deleteAllTeamsFromRace(knex, Number(ctx.params.id));
   ctx.status = 204;
 };
 //Validation of the paramater id
@@ -165,7 +166,7 @@ export default (app: Router) => {
   const requireAdmin = makeRequireRole(Role.ADMIN);
 
   //GET
-  router.get('/', validate(getRaces), getRaces);
+  router.get('/', validate(getRaces.validationScheme), getRaces);
   router.get('/withTeams/:raceId', validate(getRaceWithTeams.validationScheme), getRaceWithTeams);
   router.get('/:raceId', requireAuthentication, validate(getRaceById.validationScheme), getRaceById);
 
@@ -179,7 +180,7 @@ export default (app: Router) => {
 
   //DELETE
   router.delete('/:id',requireAuthentication, requireAdmin, validate(deleteRace.validationScheme), deleteRace);
-  router.delete('/team/all/:id', requireAuthentication, requireAdmin, validate(deleteAllTeamsFromRace), deleteAllTeamsFromRace);
+  router.delete('/team/all/:id', requireAuthentication, requireAdmin, validate(deleteAllTeamsFromRace.validationScheme), deleteAllTeamsFromRace);
   router.delete('/team/:id', requireAuthentication, requireAdmin, validate(deleteTeamFromRace.validationScheme),deleteTeamFromRace);
 
   app.use(router.routes())

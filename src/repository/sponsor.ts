@@ -61,7 +61,7 @@ const findAllSponsorsWithFinancial = async(knex:Knex) => {
 };
 
 //GET sponsors with teams
-const findAllWithTeam = async (knex:Knex, ) => {
+const findAllWithTeam = async (knex:Knex) => {
   const sponsors = await knex(tables.sponsor)
     .join(tables.team, `${tables.sponsor}.teamId`, '=', `${tables.team}.teamId`)
     .select(SELECT_COLUMNS);

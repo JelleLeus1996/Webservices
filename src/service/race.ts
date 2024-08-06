@@ -4,6 +4,7 @@ import handleDBError from './_handleDBError';
 import { Knex } from 'knex';
 import { Race } from '../types/types';
 import raceSchema from '../schema/raceSchema'
+import validation from '../schema/raceSchema';
 
 //GET
 const getById = async (knex: Knex, raceId: number): Promise<Race> => {
@@ -34,7 +35,7 @@ const getAll = async (knex: Knex) => {
 let newRace = [];
 const updateById = async (knex: Knex, raceId: number, {name, date, location}):Promise<Race> =>
 {
-  const valid = raceSchema.validate({raceId, name, date, location});
+  const valid =  validation.raceSchema.validate({raceId, name, date, location});
   if (valid.error)
   {
     throw new Error(valid.error.details[0].message);
@@ -66,7 +67,7 @@ const updateById = async (knex: Knex, raceId: number, {name, date, location}):Pr
 };
 
 //CREATE
-const create = async ({name, date, location}) => {
+const create = async (knex:Knex,{name, date, location}) => {
   const valid = validation.raceSchema.validate({name, date, location});
   if (valid.error)
   {
@@ -74,9 +75,9 @@ const create = async ({name, date, location}) => {
   }
 
   try {
-    const race = await raceRepo.create({
+    const race = await raceRepo.create(knex,{
       name, date, location});
-    return raceRepo.getById(race);
+    return raceRepo.findRaceById(knex, race);
   }catch (error) {
     throw handleDBError(error);
   }
@@ -84,7 +85,7 @@ const create = async ({name, date, location}) => {
 
 //DELETE
 const deleteById = async (knex: Knex, id: number) => {
-  const race = await raceRepo.getById(knex, id);
+  const race = await raceRepo.findRaceById(knex, id);
 
   if (!race) {
     throw new Error('Race not found');
@@ -95,11 +96,11 @@ const deleteById = async (knex: Knex, id: number) => {
 
 //Add team to a race
 const postTeamToRace = async (knex: Knex, raceId: number, teamId: number) => {
-  const race = raceRepo.getById(knex, raceId);
+  const race = raceRepo.findRaceById(knex, raceId);
   if (!race) {
     throw new Error('Race not found');
   }
-  const team = teamRepo.getById(knex, teamId);
+  const team = teamRepo.findById(knex, teamId);
   if (!team) {
     throw new Error('Team not found');
   }
@@ -107,15 +108,15 @@ const postTeamToRace = async (knex: Knex, raceId: number, teamId: number) => {
   return [race, team];
 };
 
-const postTeamsToRace = async (raceId: number, teamIds: number) => {
-  const race = raceRepo.getById(raceId);
+const postTeamsToRace = async (knex: Knex, raceId: number, teamIds: number[]) => {
+  const race = raceRepo.findRaceById(knex, raceId);
   if (!race) {
     throw new Error('Race not found');
   }
   // Check if each team exists
   const validTeams = [];
   for (const teamId of teamIds) {
-    const team = await teamRepo.getById(teamId);
+    const team = await teamRepo.findById(knex, teamId);
     if (!team) {
       // You might want to log this error or handle it differently
       throw new Error(`Team with ID ${teamId} not found`);
@@ -129,7 +130,7 @@ const postTeamsToRace = async (raceId: number, teamIds: number) => {
   }
 
   // Add all valid teams to the race
-  await raceRepo.addTeamsToRace(raceId, validTeams);
+  await raceRepo.addTeamsToRace(knex, raceId, validTeams);
   
   // Return the race and the list of valid teams added
   return {
@@ -140,29 +141,29 @@ const postTeamsToRace = async (raceId: number, teamIds: number) => {
 };
 
 //Remove one team from a race
-const deleteTeamFromRace = async (raceId: number, teamId: number) => {
-  const race = raceRepo.getById(raceId);
+const deleteTeamFromRace = async (knex: Knex, raceId: number, teamId: number) => {
+  const race = raceRepo.findRaceById(knex, raceId);
   if (!race) {
     throw new Error('Race not found');
   }
-  const team = teamRepo.getById(teamId);
+  const team = teamRepo.findById(knex, teamId);
   if (!team) {
     throw new Error('Team not found');
   }
-  await raceRepo.removeTeamFromRace(raceId, teamId);
+  await raceRepo.removeTeamFromRace(knex, raceId, teamId);
   return [race, team];
 };
 
 //Delete all teams from a race
-const deleteAllTeamsFromRace = async (raceId: number) => {
-  const race = raceRepo.getById(raceId);
+const deleteAllTeamsFromRace = async (knex: Knex, raceId: number) => {
+  const race = raceRepo.findRaceById(knex, raceId);
   if (!race) {
     throw new Error('Race not found');
   }
-  await raceRepo.removeAllTeamsFromRace(raceId);
+  await raceRepo.removeAllTeamsFromRace(knex, raceId);
   return raceId;
 };
 
-module.exports={getById, getByIdWithTeams, getAll, create, updateById, deleteById, postTeamToRace, postTeamsToRace,
+export default {getById, getByIdWithTeams, getAll, create, updateById, deleteById, postTeamToRace, postTeamsToRace,
   deleteTeamFromRace,deleteAllTeamsFromRace
 };
