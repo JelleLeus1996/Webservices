@@ -1,7 +1,7 @@
 {
   "name": "2324-webservices-JelleLeus1996",
   "version": "1.0.0",
-  "main": "src/index.js",
+  "main": "src/index.ts",
   "repository": "https://github.com/Web-IV/2324-webservices-JelleLeus1996.git",
   "author": "Jelle Leus <jelle.leus@student.hogent.be>",
   "license": "MIT",
@@ -54,7 +54,7 @@
     ],
     "ext": "js,json",
     "legacyWatch": true,
-    "exec": "node --inspect=0.0.0.0:9000 --trace-warnings src/index.js"
+    "exec": "node --inspect=0.0.0.0:9000 --trace-warnings src/index.ts"
   },
   "engines": {
     "npm": ">=9.8.0",
